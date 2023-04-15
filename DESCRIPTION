@@ -34,3 +34,8 @@ Imports:
     SingleCellExperiment,
     SpatialExperiment,
     SummarizedExperiment
+Suggests: 
+    BiocStyle,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
