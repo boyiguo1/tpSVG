@@ -10,6 +10,9 @@
 #'
 #' @return
 #'
+#' @importFrom mgcv gam anova.gam
+#' @importFrom stats var anova
+#' @importFrom methods is
 #' @importFrom SpatialExperiment spatialCoords
 #' @importFrom SingleCellExperiment counts logcounts
 #' @importFrom SummarizedExperiment assayNames assays rowData 'rowData<-'
@@ -105,8 +108,8 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
       # F_stat = anova(out_i)$s.table[,"F"],
       # loglik = out_i$log_likelihood,
       F_stat = anova(tp_mdl)$s.table[,"F"],
-      raw.p = broom::tidy(tp_mdl) |>
-        dplyr::pull(p.value),
+      # raw.p = broom::tidy(tp_mdl) |>
+      #   dplyr::pull(p.value),
       GE_mean = tp_mdl$coefficients[1] |> unname(),
       tp_edf = tp_mdl$edf |> sum() - 1,
       tp_ref.df = tp_mdl$edf1 |> sum() - 1,

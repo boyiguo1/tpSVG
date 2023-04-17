@@ -27,17 +27,22 @@ biocViews:
     Software
 Encoding: UTF-8
 Depends: 
-    R
+    mgcv,
+    R (>= 4.2)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
+    BiocParallel,
+    methods,
     SingleCellExperiment,
     SpatialExperiment,
+    stats,
     SummarizedExperiment
 Suggests: 
     BiocStyle,
     knitr,
     nnSVG,
     rmarkdown,
+    scran,
     STexampleData
 VignetteBuilder: knitr
