@@ -93,23 +93,30 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   # range_all <- max(apply(coords, 2, function(col) diff(range(col))))
   # coords <- apply(coords, 2, function(col) (col - min(col)) / range_all)
 
-  # calculate ordering of coordinates
 
-  # run BRISC using parallelization
+
+
+  stopifnot(ncol(coords)==2)
+
+
+  colnames(coords) <- c("coord_x", "coord_y")
+
+  fit.df <- data.frame(coords)
+
   ix <- seq_len(nrow(y))
   out_tp <- bplapply(ix, function(i) {
     # fit model (intercept-only model if x is NULL)
-    y_i <- y[i, ]
+    fit.df$tmp_y <- y[i, ]
     runtime <- system.time({
-      tp_mdl <- gam(y~s(cord_x, cord_y, bs="tp"))
+      tp_mdl <- gam(tmp_y~s(coord_x, coord_y, bs="tp"), data = fit.df)
     })
 
     res_i <- c(
+      # TODO: these implementation wont work for situation where covariates are allowed
       # F_stat = anova(out_i)$s.table[,"F"],
       # loglik = out_i$log_likelihood,
       F_stat = anova(tp_mdl)$s.table[,"F"],
-      # raw.p = broom::tidy(tp_mdl) |>
-      #   dplyr::pull(p.value),
+      raw_p = anova(tp_mdl)$s.table[,"p-value"],
       GE_mean = tp_mdl$coefficients[1] |> unname(),
       tp_edf = tp_mdl$edf |> sum() - 1,
       tp_ref.df = tp_mdl$edf1 |> sum() - 1,
@@ -119,6 +126,7 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
     res_i
   }, BPPARAM = BPPARAM)
 
+  browser()
   # collapse output list into matrix
   mat_tp <- do.call("rbind", out_tp)
 
