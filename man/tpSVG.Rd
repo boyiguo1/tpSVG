@@ -15,7 +15,53 @@ tpSVG(
 )
 }
 \arguments{
-\item{verbose}{}
+\item{input}{\code{SpatialExperiment} or \code{numeric} matrix: Input data,
+which can either be a \code{SpatialExperiment} object or a \code{numeric}
+matrix of values. If it is a \code{SpatialExperiment} object, it is assumed
+to have an \code{assay} slot containing either logcounts (e.g. from the
+\code{scran} package) or deviance residuals (e.g. from the \code{scry}
+package), and a \code{spatialCoords} slot containing spatial coordinates of
+the measurements. If it is a \code{numeric} matrix, the values are assumed
+to already be normalized and transformed (e.g. logcounts), formatted as
+\code{rows = genes} and \code{columns = spots}, and a separate
+\code{numeric} matrix of spatial coordinates must also be provided with the
+\code{spatial_coords} argument.}
+
+\item{spatial_coords}{\code{numeric} matrix: Matrix containing columns of
+spatial coordinates, formatted as \code{rows = spots}. This must be
+provided if \code{input} is provied as a \code{numeric} matrix of values,
+and is ignored if \code{input} is provided as a \code{SpatialExperiment}
+object. Default = NULL.}
+
+\item{X}{\code{numeric} matrix: Optional design matrix containing columns of
+covariates per spatial location, e.g. known spatial domains. Number of rows
+must match the number of spatial locations. Default = NULL, which fits an
+intercept-only model.}
+
+\item{assay_name}{\code{character}: If \code{input} is provided as a
+\code{SpatialExperiment} object, this argument selects the name of the
+\code{assay} slot in the input object containing the preprocessed gene
+expression values. For example, \code{logcounts} for log-transformed
+normalized counts from the \code{scran} package, or
+\code{binomial_deviance_residuals} for deviance residuals from the
+\code{scry} package. Default = \code{"logcounts"}, or ignored if
+\code{input} is provided as a \code{numeric} matrix of values.}
+
+\item{n_threads}{\code{integer}: Number of threads for parallelization.
+Default = 1. We recommend setting this equal to the number of cores
+available (if working on a laptop or desktop) or around 10 or more (if
+working on a compute cluster).}
+
+\item{BPPARAM}{\code{BiocParallelParam}: Optional additional argument for
+parallelization. This argument is provided for advanced users of
+\code{BiocParallel} for further flexibility for parallelization on some
+operating systems. If provided, this should be an instance of
+\code{BiocParallelParam}. For most users, the recommended option is to use
+the \code{n_threads} argument instead. Default = NULL, in which case
+\code{n_threads} will be used instead.}
+
+\item{verbose}{\code{logical}: Whether to display verbose output for model
+fitting and parameter estimation from \code{BRISC}. Default = FALSE.}
 }
 \description{
 Title
