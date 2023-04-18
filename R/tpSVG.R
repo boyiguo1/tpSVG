@@ -41,6 +41,7 @@
 #'   \code{n_threads} will be used instead.
 #' @param verbose \code{logical}: Whether to display verbose output for model
 #'   fitting and parameter estimation from \code{BRISC}. Default = FALSE.
+#' @param ... Reserved for future arguments.
 #'
 #' @return If the input was provided as a \code{SpatialExperiment} object, the
 #'   output values are returned as additional columns in the \code{rowData} slot
@@ -100,7 +101,7 @@
 tpSVG <- function(input, spatial_coords = NULL, X = NULL,
                   assay_name = "logcounts",
                   n_threads = 1, BPPARAM = NULL,
-                  verbose = FALSE) {
+                  verbose = FALSE, ...) {
 
 
   # NOTE: Some code blocks are borrowed from nnSVG by Lukas M Weber.
