@@ -102,7 +102,7 @@ spe <- spe[, colData(spe)$in_tissue == 1]
 
 # skip spot-level quality control, since this has been performed previously
 # on this dataset
-Add library size
+# Add library size
 spe <- addPerCellQCMetrics(spe)
 
 # filter low-expressed and mitochondrial genes

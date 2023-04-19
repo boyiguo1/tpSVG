@@ -60,7 +60,7 @@
 #' @importFrom SingleCellExperiment counts logcounts
 #' @importFrom SummarizedExperiment assayNames assays rowData 'rowData<-'
 #' @importFrom BiocParallel bplapply MulticoreParam
-#' @importFrom MatrixGenerics rowSums2
+#' @importFrom MatrixGenerics colSums2
 #'
 #' @export
 #'
@@ -81,7 +81,7 @@
 #'
 #' # skip spot-level quality control, since this has been performed previously
 #' # on this dataset
-#' Add library size
+#' # Add library size
 #' spe <- addPerCellQCMetrics(spe)
 #'
 #' # filter low-expressed and mitochondrial genes
@@ -172,7 +172,7 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   if (is.null(offset))
     offset <- rep(0, ncol(y))
   if (is.null(weights))
-    weights <- rep(0, ncol(y))
+    weights <- rep(1, ncol(y))
 
   if(flag_count_mdl){
     if (is.null(offset)){
