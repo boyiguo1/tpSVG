@@ -99,8 +99,8 @@
 #' # run nnSVG
 #' set.seed(123)
 #' spe_gaus <- tpSVG(spe)
-#' spe_poisson  <- tpSVG(spe, family = poisson,
-#'  assay_name = "counts", offset = log(spe$total))
+#' #spe_poisson  <- tpSVG(spe, family = poisson,
+#' # assay_name = "counts", offset = log(spe$total))
 #'
 #' # show results
 #' # for more details see extended example in vignette
@@ -169,7 +169,6 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   if (is.null(offset))
     offset <- rep(0, ncol(y))
 
-  browser()
   if(flag_count_mdl){
     if (is.null(offset)){
       warning("Using count-based model without supplying offset.",
@@ -197,7 +196,6 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
         offset = offset, weights = weights)
     })
 
-    browser()
 
     if(flag_count_mdl) {
       res_i <- c(
