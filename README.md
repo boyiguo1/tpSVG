@@ -3,6 +3,7 @@
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R build status](https://github.com/boyiguo1/tpSVG/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/boyiguo1/tpSVG/actions)
 <!-- badges: end -->
 
 The goal of tpSVG is to ...
