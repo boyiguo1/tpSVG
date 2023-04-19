@@ -6,5 +6,4 @@
 inst/doc
 
 
-^R/tpSVG_fit.R$
-^R/poisson_offset.R
+temp_fld
