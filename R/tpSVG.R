@@ -29,6 +29,8 @@
 #'   \code{scry} package. Default = \code{"logcounts"}, or ignored if
 #'   \code{input} is provided as a \code{numeric} matrix of values.
 #' @param family TODO: fixme
+#' @param offset TODO: fixme
+#' @param weights TODO: fixme
 #' @param n_threads \code{integer}: Number of threads for parallelization.
 #'   Default = 1. We recommend setting this equal to the number of cores
 #'   available (if working on a laptop or desktop) or around 10 or more (if
@@ -51,13 +53,14 @@
 #'   values include p-values without any adjustment and statistics reporting
 #'   reporting the thinplate spline model.
 #'
-#' @importFrom mgcv gam anova.gam
+#' @importFrom mgcv gam anova.gam gaussian negbin
 #' @importFrom stats var anova
 #' @importFrom methods is
 #' @importFrom SpatialExperiment spatialCoords
 #' @importFrom SingleCellExperiment counts logcounts
 #' @importFrom SummarizedExperiment assayNames assays rowData 'rowData<-'
 #' @importFrom BiocParallel bplapply MulticoreParam
+#' @importFrom MatrixGenerics rowSums2
 #'
 #' @export
 #'
@@ -107,7 +110,7 @@
 #' rowData(spe_gaus)
 tpSVG <- function(input, spatial_coords = NULL, X = NULL,
                   family = gaussian(),
-                  offset = NULL,
+                  offset = NULL, weights = NULL,
                   assay_name = "logcounts",
                   n_threads = 1, BPPARAM = NULL,
                   verbose = FALSE, ...) {
@@ -168,6 +171,8 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
 
   if (is.null(offset))
     offset <- rep(0, ncol(y))
+  if (is.null(weights))
+    weights <- rep(0, ncol(y))
 
   if(flag_count_mdl){
     if (is.null(offset)){

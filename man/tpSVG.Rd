@@ -8,10 +8,14 @@ tpSVG(
   input,
   spatial_coords = NULL,
   X = NULL,
+  family = gaussian(),
+  offset = NULL,
+  weights = NULL,
   assay_name = "logcounts",
   n_threads = 1,
   BPPARAM = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \arguments{
@@ -38,6 +42,12 @@ covariates per spatial location, e.g. known spatial domains. Number of rows
 must match the number of spatial locations. Default = NULL, which fits an
 intercept-only model.}
 
+\item{family}{TODO: fixme}
+
+\item{offset}{TODO: fixme}
+
+\item{weights}{TODO: fixme}
+
 \item{assay_name}{\code{character}: If \code{input} is provided as a
 \code{SpatialExperiment} object, this argument selects the name of the
 \code{assay} slot in the input object containing the preprocessed gene
@@ -62,6 +72,16 @@ the \code{n_threads} argument instead. Default = NULL, in which case
 
 \item{verbose}{\code{logical}: Whether to display verbose output for model
 fitting and parameter estimation from \code{BRISC}. Default = FALSE.}
+
+\item{...}{Reserved for future arguments.}
+}
+\value{
+If the input was provided as a \code{SpatialExperiment} object, the
+output values are returned as additional columns in the \code{rowData} slot
+of the input object. If the input was provided as a \code{numeric} matrix
+of values, the output is returned as a \code{numeric} matrix. The output
+values include p-values without any adjustment and statistics reporting
+reporting the thinplate spline model.
 }
 \description{
 Title
@@ -82,6 +102,8 @@ spe <- spe[, colData(spe)$in_tissue == 1]
 
 # skip spot-level quality control, since this has been performed previously
 # on this dataset
+Add library size
+spe <- addPerCellQCMetrics(spe)
 
 # filter low-expressed and mitochondrial genes
 spe <- filter_genes(spe)
@@ -91,6 +113,8 @@ spe <- filter_genes(spe)
 spe <- computeLibraryFactors(spe)
 spe <- logNormCounts(spe)
 
+
+
 # select small number of genes for faster runtime in this example
 set.seed(123)
 ix <- sample(seq_len(nrow(spe)), 4)
@@ -98,9 +122,11 @@ spe <- spe[ix, ]
 
 # run nnSVG
 set.seed(123)
-spe <- tpSVG(spe)
+spe_gaus <- tpSVG(spe)
+#spe_poisson  <- tpSVG(spe, family = poisson,
+# assay_name = "counts", offset = log(spe$total))
 
 # show results
 # for more details see extended example in vignette
-rowData(spe)
+rowData(spe_gaus)
 }
