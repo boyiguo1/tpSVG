@@ -53,8 +53,8 @@
 #'   values include p-values without any adjustment and statistics reporting
 #'   reporting the thinplate spline model.
 #'
-#' @importFrom mgcv gam anova.gam gaussian negbin
-#' @importFrom stats var anova
+#' @importFrom mgcv gam anova.gam  negbin
+#' @importFrom stats var anova gaussian
 #' @importFrom methods is
 #' @importFrom SpatialExperiment spatialCoords
 #' @importFrom SingleCellExperiment counts logcounts

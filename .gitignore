@@ -4,3 +4,7 @@
 .httr-oauth
 .DS_Store
 inst/doc
+
+
+^R/tpSVG_fit.R$
+^R/poisson_offset.R
