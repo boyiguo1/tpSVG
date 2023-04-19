@@ -28,6 +28,7 @@
 #'   \code{binomial_deviance_residuals} for deviance residuals from the
 #'   \code{scry} package. Default = \code{"logcounts"}, or ignored if
 #'   \code{input} is provided as a \code{numeric} matrix of values.
+#' @param family TODO: fixme
 #' @param n_threads \code{integer}: Number of threads for parallelization.
 #'   Default = 1. We recommend setting this equal to the number of cores
 #'   available (if working on a laptop or desktop) or around 10 or more (if
@@ -77,6 +78,8 @@
 #'
 #' # skip spot-level quality control, since this has been performed previously
 #' # on this dataset
+#' Add library size
+#' spe <- addPerCellQCMetrics(spe)
 #'
 #' # filter low-expressed and mitochondrial genes
 #' spe <- filter_genes(spe)
@@ -86,6 +89,8 @@
 #' spe <- computeLibraryFactors(spe)
 #' spe <- logNormCounts(spe)
 #'
+#'
+#'
 #' # select small number of genes for faster runtime in this example
 #' set.seed(123)
 #' ix <- sample(seq_len(nrow(spe)), 4)
@@ -93,12 +98,16 @@
 #'
 #' # run nnSVG
 #' set.seed(123)
-#' spe <- tpSVG(spe)
+#' spe_gaus <- tpSVG(spe)
+#' spe_poisson  <- tpSVG(spe, family = poisson,
+#'  assay_name = "counts", offset = log(spe$total))
 #'
 #' # show results
 #' # for more details see extended example in vignette
-#' rowData(spe)
+#' rowData(spe_gaus)
 tpSVG <- function(input, spatial_coords = NULL, X = NULL,
+                  family = gaussian(),
+                  offset = NULL,
                   assay_name = "logcounts",
                   n_threads = 1, BPPARAM = NULL,
                   verbose = FALSE, ...) {
@@ -134,11 +143,45 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   # coords <- apply(coords, 2, function(col) (col - min(col)) / range_all)
 
 
+  # TODO: create isolated internal function
+  # Check family
+  # NOTE: the code is copied from "stats::glm"
+  if (is.character(family))
+    family <- get(family, mode = "function", envir = parent.frame())
+  if (is.function(family))
+    family <- family()
+  if (is.null(family$family)) {
+    print(family)
+    stop("'family' not recognized")
+  }
+  # Copy end
+  if (!(family$family %in% c("gaussian", "negative binomial", "poisson"))){
+    print(family)
+    stop("'family' has to be one of the following distributions: gaussian,",
+         "negative binomial (negbin), poisson")
+  }
+  # New function ends
+
+
+
+  flag_count_mdl <- family$family %in% c("negative binomial", "poisson")
+
+  if (is.null(offset))
+    offset <- rep(0, ncol(y))
+
+  browser()
+  if(flag_count_mdl){
+    if (is.null(offset)){
+      warning("Using count-based model without supplying offset.",
+              "Library size is calculated with column sums of the count matrix")
+      offset <- log(colSums2(y))
+    }
+    # TODO: Check if y matrix is count matrix
+  }
+
 
 
   stopifnot(ncol(coords)==2)
-
-
   colnames(coords) <- c("coord_x", "coord_y")
 
   fit.df <- data.frame(coords)
@@ -148,25 +191,49 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
     # fit model (intercept-only model if x is NULL)
     fit.df$tmp_y <- y[i, ]
     runtime <- system.time({
-      tp_mdl <- gam(tmp_y~s(coord_x, coord_y, bs="tp"), data = fit.df)
+      tp_mdl <- gam(
+        tmp_y~s(coord_x, coord_y, bs="tp"),
+        family = family, data = fit.df,
+        offset = offset, weights = weights)
     })
 
-    res_i <- c(
-      # TODO: these implementation wont work for situation where covariates are allowed
-      # F_stat = anova(out_i)$s.table[,"F"],
-      # loglik = out_i$log_likelihood,
-      F_stat = anova(tp_mdl)$s.table[,"F"],
-      raw_p = anova(tp_mdl)$s.table[,"p-value"],
-      GE_mean = tp_mdl$coefficients[1] |> unname(),
-      tp_edf = tp_mdl$edf |> sum() - 1,
-      tp_ref.df = tp_mdl$edf1 |> sum() - 1,
-      residual_var = tp_mdl$residuals |> var(),
-      runtime = runtime[["elapsed"]]
-    )
+    browser()
+
+    if(flag_count_mdl) {
+      res_i <- c(
+        # TODO: these implementation wont work for situation where covariates are allowed
+        # F_stat = anova(out_i)$s.table[,"F"],
+        # loglik = out_i$log_likelihood,
+        Chi.sq_stat = anova(tp_mdl)$s.table[,"Chi.sq"],
+        raw.p = anova(tp_mdl)$s.table[,"p-value"],
+        # F_stat = anova(tp_mdl)$s.table[,"F"],
+        # raw_p = anova(tp_mdl)$s.table[,"p-value"],
+        # GE_mean = tp_mdl$coefficients[1] |> unname(),
+        # tp_edf = tp_mdl$edf |> sum() - 1,
+        # tp_ref.df = tp_mdl$edf1 |> sum() - 1,
+        # residual_var = tp_mdl$residuals |> var(),
+        runtime = runtime[["elapsed"]]
+      )
+    } else{
+      res_i <- c(
+        # TODO: these implementation wont work for situation where covariates are allowed
+        # F_stat = anova(out_i)$s.table[,"F"],
+        # loglik = out_i$log_likelihood,
+        F_stat = anova(tp_mdl)$s.table[,"F"],
+        raw_p = anova(tp_mdl)$s.table[,"p-value"],
+        GE_mean = tp_mdl$coefficients[1] |> unname(),
+        tp_edf = tp_mdl$edf |> sum() - 1,
+        tp_ref.df = tp_mdl$edf1 |> sum() - 1,
+        residual_var = tp_mdl$residuals |> var(),
+        runtime = runtime[["elapsed"]]
+      )
+    }
+
+
+
     res_i
   }, BPPARAM = BPPARAM)
 
-  browser()
   # collapse output list into matrix
   mat_tp <- do.call("rbind", out_tp)
 
