@@ -1,4 +1,4 @@
-#' Title
+#' Thin Plate Spline Model to Detect Spatially Variable Genes
 #'
 #' @param input \code{SpatialExperiment} or \code{numeric} matrix: Input data,
 #'   which can either be a \code{SpatialExperiment} object or a \code{numeric}
@@ -64,7 +64,6 @@
 #'
 #' @export
 #'
-#'
 #' @examples
 #' library(SpatialExperiment)
 #' library(STexampleData)
@@ -101,9 +100,21 @@
 #'
 #' # run nnSVG
 #' set.seed(123)
+#'
+#' # Gaussian Model
 #' spe_gaus <- tpSVG(spe)
-#' #spe_poisson  <- tpSVG(spe, family = poisson,
-#' # assay_name = "counts", offset = log(spe$total))
+#'
+#' # Poisson Model
+#' spe_poisson  <- tpSVG(spe, family = poisson,
+#'  assay_name = "counts",
+#'  offset = log(spe$total)   # Natural log library size
+#'  )
+#'
+#' # Negative Binomial Model
+#' spe_poisson  <- tpSVG(spe, family = negbin,
+#'  assay_name = "counts",
+#'  offset = log(spe$total)   # Natural log library size
+#'  )
 #'
 #' # show results
 #' # for more details see extended example in vignette

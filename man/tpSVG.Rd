@@ -2,7 +2,7 @@
 % Please edit documentation in R/tpSVG.R
 \name{tpSVG}
 \alias{tpSVG}
-\title{Title}
+\title{Thin Plate Spline Model to Detect Spatially Variable Genes}
 \usage{
 tpSVG(
   input,
@@ -84,7 +84,7 @@ values include p-values without any adjustment and statistics reporting
 reporting the thinplate spline model.
 }
 \description{
-Title
+Thin Plate Spline Model to Detect Spatially Variable Genes
 }
 \examples{
 library(SpatialExperiment)
@@ -122,9 +122,21 @@ spe <- spe[ix, ]
 
 # run nnSVG
 set.seed(123)
+
+# Gaussian Model
 spe_gaus <- tpSVG(spe)
-#spe_poisson  <- tpSVG(spe, family = poisson,
-# assay_name = "counts", offset = log(spe$total))
+
+# Poisson Model
+spe_poisson  <- tpSVG(spe, family = poisson,
+ assay_name = "counts",
+ offset = log(spe$total)   # Natural log library size
+ )
+
+# Negative Binomial Model
+spe_poisson  <- tpSVG(spe, family = negbin,
+ assay_name = "counts",
+ offset = log(spe$total)   # Natural log library size
+ )
 
 # show results
 # for more details see extended example in vignette
