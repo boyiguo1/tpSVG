@@ -51,7 +51,10 @@
 #'   of the input object. If the input was provided as a \code{numeric} matrix
 #'   of values, the output is returned as a \code{numeric} matrix. The output
 #'   values include p-values without any adjustment and statistics reporting
-#'   reporting the thinplate spline model.
+#'   reporting the thinplate spline model. The \code {test_stat} entry of the
+#'   returned object is the test statistic for the corresponding model,
+#'    that is F statistics for the gaussian model and the Chi-squared statistics
+#'    for generalized models.
 #'
 #' @importFrom mgcv gam anova.gam  negbin
 #' @importFrom stats var anova gaussian
@@ -98,7 +101,7 @@
 #' ix <- sample(seq_len(nrow(spe)), 4)
 #' spe <- spe[ix, ]
 #'
-#' # run nnSVG
+#' # run tpSVG
 #' set.seed(123)
 #'
 #' # Gaussian Model
@@ -216,10 +219,11 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
     if(flag_count_mdl) {
       res_i <- c(
         # TODO: these implementation wont work for situation where covariates are allowed
-        # F_stat = anova(out_i)$s.table[,"F"],
+        # TODO: consistent naming convention for Statistics
+       # F_stat = anova(out_i)$s.table[,"F"],
         # loglik = out_i$log_likelihood,
-        Chi.sq_stat = anova(tp_mdl)$s.table[,"Chi.sq"],
-        raw.p = anova(tp_mdl)$s.table[,"p-value"],
+        test_stat = anova(tp_mdl)$s.table[,"Chi.sq"],
+        raw_p = anova(tp_mdl)$s.table[,"p-value"],
         # F_stat = anova(tp_mdl)$s.table[,"F"],
         # raw_p = anova(tp_mdl)$s.table[,"p-value"],
         # GE_mean = tp_mdl$coefficients[1] |> unname(),
@@ -233,7 +237,7 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
         # TODO: these implementation wont work for situation where covariates are allowed
         # F_stat = anova(out_i)$s.table[,"F"],
         # loglik = out_i$log_likelihood,
-        F_stat = anova(tp_mdl)$s.table[,"F"],
+        test_stat = anova(tp_mdl)$s.table[,"F"],
         raw_p = anova(tp_mdl)$s.table[,"p-value"],
         GE_mean = tp_mdl$coefficients[1] |> unname(),
         tp_edf = tp_mdl$edf |> sum() - 1,
