@@ -51,7 +51,7 @@
 #'   of the input object. If the input was provided as a \code{numeric} matrix
 #'   of values, the output is returned as a \code{numeric} matrix. The output
 #'   values include p-values without any adjustment and statistics reporting
-#'   reporting the thinplate spline model. The \code {test_stat} entry of the
+#'   reporting the thinplate spline model. The \code{test_stat} entry of the
 #'   returned object is the test statistic for the corresponding model,
 #'    that is F statistics for the gaussian model and the Chi-squared statistics
 #'    for generalized models.
