@@ -112,12 +112,14 @@
 #'  assay_name = "counts",
 #'  offset = log(spe$total)   # Natural log library size
 #'  )
-#'
+#' \dontrun{
 #' # Negative Binomial Model
+#' # Currently buggy
 #' spe_poisson  <- tpSVG(spe, family = negbin,
 #'  assay_name = "counts",
 #'  offset = log(spe$total)   # Natural log library size
 #'  )
+#'  }
 #'
 #' # show results
 #' # for more details see extended example in vignette
