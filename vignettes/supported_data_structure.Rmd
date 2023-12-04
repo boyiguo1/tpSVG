@@ -1,0 +1,30 @@
+---
+title: "Working with different data objects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with different data objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(tpSVG)
+```
+
+
+## `Data.Frame`
+[TODO: to be added]
+
+
+## Packages extending `SpatialExperiment` (e.g. `SpatialFeatureExperiment`)
+[TODO: to be added]
+
+## Non-bioconductor pipeline (e.g. `seurat`)
+[TODO: to be added]
