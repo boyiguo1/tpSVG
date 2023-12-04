@@ -89,14 +89,24 @@ spe_gauss <- tpSVG(
 
 ### Covariates Model
 ```{r}
+#TODO: To implement this.
+
+# Check missing data
+idx_complete_case <- complete.cases(spe$ground_truth)
+# If multiple covariates
+# idx_complete_case <- complete.cases(spe$ground_truth, spe$cell_count)
+
+spe <- spe[, idx_complete_case]
+  
+# Create a design matrix
+x <- spe$ground_truth   # Remove intercept term
+
 spe_poisson_cov  <- tpSVG(
   spe,
-  X = spe$ground_truth, 
+  X = x, 
   family = poisson,
   assay_name = "counts",
   offset = log(spe$total)   # Natural log library size
 )
-
-
 ```
 
