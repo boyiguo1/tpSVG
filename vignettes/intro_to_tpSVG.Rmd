@@ -1,5 +1,5 @@
 ---
-title: "intro_to_tpSVG"
+title: "Introduction to tpSVG"
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{intro_to_tpSVG}
@@ -17,3 +17,86 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(tpSVG)
 ```
+
+The objective of `tpSVG` is to detect spatially variable genes when analyzing spatially-resolved transcriptomics data. This includes both unsupervised features where there's not additional information is supplied besides the (normalized) gene counts and spatial coordinates, but also the spatial variation explained besides some covariates, such as tissue anatomy or possibly cell type composition. <!-- For any interested readers, please find our preprint describing the `tpSVG` models via bioRxiv [TODO: add link].  -->
+
+
+# Installation
+
+The latest development version can be installed from GitHub following
+```{r eval = FALSE}
+if (!require("devtools")) install.packages("devtools")
+devtools::install_github("boyiguo1/tpSVG")
+```
+
+> NOTE: we are working on finalizing the package and its submission to [Bioconductor](https://www.bioconductor.org/).
+
+<!-- You can install the latest release version of `tpSVG` from Bioconductor via the following code. Additional details are shown on the Bioconductor page. -->
+
+<!-- if (!require("BiocManager", quietly = TRUE)) { -->
+<!--   install.packages("BiocManager") -->
+<!-- } -->
+<!-- BiocManager::install("tpSVG") -->
+
+<!-- The latest development version can also be installed from the `devel` version of Bioconductor or from GitHub following -->
+
+<!-- if (!require("devtools")) install.packages("devtools") -->
+<!-- devtools::install_github("boyiguo1/tpSVG") -->
+
+<!-- # `devel` version from Bioconductor -->
+<!-- BiocManager::install(version='devel') -->
+
+## Analyze gene expression counts using Poisson distribtuion
+```{r}
+library(SpatialExperiment)
+library(STexampleData)
+
+spe <- Visium_humanDLPFC()
+spe <- spe[, colData(spe)$in_tissue == 1]
+
+# Calcualte library size
+spe$total <- counts(spe) |> colSums()
+
+# Smaller set of genes
+idx <- which(
+  rowData(spe)$gene_name %in% c("MOBP", "PCP4", "SNAP25",
+                                "HBB", "IGKC", "NPY")
+)
+spe <- spe[idx, ]
+
+set.seed(1)
+spe_poisson  <- tpSVG(
+  spe,
+  family = poisson,
+  assay_name = "counts",
+  offset = log(spe$total)   # Natural log library size
+)
+
+
+rowData(spe_poisson)
+```
+
+
+## Gaussian model for log-transformed normalized data
+```{r, eval = FALSE}
+spe_gauss <- tpSVG(
+  spe, 
+  family = gaussian(),
+  assay_name = "logcounts",
+  offset = NULL   # Natural log library size
+)
+```
+
+### Covariates Model
+```{r}
+spe_poisson_cov  <- tpSVG(
+  spe,
+  X = spe$ground_truth, 
+  family = poisson,
+  assay_name = "counts",
+  offset = log(spe$total)   # Natural log library size
+)
+
+
+```
+
