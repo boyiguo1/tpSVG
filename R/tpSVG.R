@@ -57,7 +57,7 @@
 #'    for generalized models.
 #'
 #' @importFrom mgcv gam anova.gam  negbin
-#' @importFrom stats var anova gaussian
+#' @importFrom stats var anova gaussian as.formula
 #' @importFrom methods is
 #' @importFrom SpatialExperiment spatialCoords
 #' @importFrom SingleCellExperiment counts logcounts
@@ -139,7 +139,8 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   }
 
   if (!is.null(X)) {
-    stop("Not implemented yet")
+    # browser()
+    # stop("Not implemented yet")
     stopifnot(nrow(X) == ncol(input))
   }
 
@@ -204,15 +205,40 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
   stopifnot(ncol(coords)==2)
   colnames(coords) <- c("coord_x", "coord_y")
 
-  fit.df <- data.frame(coords)
+
+  if(!is.null(ncol(X)))
+    stop("not implemented for complex desgin matrix.")
+  if(is.null(ncol(X)))
+    fit.df <- data.frame( coords)
+  else {
+    fit.df <- data.frame(
+      coords,
+      X
+    )
+  }
+
 
   ix <- seq_len(nrow(y))
   out_tp <- bplapply(ix, function(i) {
     # fit model (intercept-only model if x is NULL)
     fit.df$tmp_y <- y[i, ]
     runtime <- system.time({
+
+      tp_formula <- "tmp_y~s(coord_x, coord_y, bs='tp')"
+
+      # reformulate(, tp_formula[[2]])
+
+      if(!is.null(X)){
+        tp_formula <- paste0(tp_formula, " + ",
+                             paste0(#colnames(X), # TODO: need to fix here
+                                    "X",
+                                    collapse = "+")
+                             )
+      }
+
+
       tp_mdl <- gam(
-        tmp_y~s(coord_x, coord_y, bs="tp"),
+        formula = tp_formula|> as.formula() ,
         family = family, data = fit.df,
         offset = offset, weights = weights)
     })
