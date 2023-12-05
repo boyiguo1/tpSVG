@@ -236,12 +236,15 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
                              )
       }
 
-
+      # browser()
       tp_mdl <- gam(
         formula = tp_formula|> as.formula() ,
         family = family, data = fit.df,
         offset = offset, weights = weights)
     })
+
+
+    # anova(tp_mdl)
 
 
     if(flag_count_mdl) {
@@ -267,10 +270,10 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
         # loglik = out_i$log_likelihood,
         test_stat = anova(tp_mdl)$s.table[,"F"],
         raw_p = anova(tp_mdl)$s.table[,"p-value"],
-        GE_mean = tp_mdl$coefficients[1] |> unname(),
-        tp_edf = tp_mdl$edf |> sum() - 1,
-        tp_ref.df = tp_mdl$edf1 |> sum() - 1,
-        residual_var = tp_mdl$residuals |> var(),
+        # GE_mean = tp_mdl$coefficients[1] |> unname(),
+        # tp_edf = tp_mdl$edf |> sum() - 1,
+        # tp_ref.df = tp_mdl$edf1 |> sum() - 1,
+        # residual_var = tp_mdl$residuals |> var(),
         runtime = runtime[["elapsed"]]
       )
     }
