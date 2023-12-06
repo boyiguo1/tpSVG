@@ -38,6 +38,10 @@ __Implementation Questions__
 Both sequenced-based SRT and image-based SRT are supported by `tpSVG`. For more details, please refer to xxx.
 
 
+* Can I use other scale factor as offset in the count-model?
+
+_Yes, just remember to take log for the offset term. In the vignettes, the offset of the model is default to library size, i.e. the total number of molecular in a spot/cell, but the count models should be compatible to other definition of scale factor in theory._
+
 
 __Theoretical Questions__
 
@@ -45,7 +49,7 @@ __Theoretical Questions__
 
   _[TODO: revise this section] and  of spatial count-based model the to provide convinience in practice, to directly model the gene expression in its natural form, in contrast to additional arithmetic transformation, e.g. log transformation, that could introduce additional bias in the analysis. As a result, `tpSVG`_ 
 
-* 
+
 
 
 * 
