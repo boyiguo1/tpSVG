@@ -15,13 +15,13 @@ Authors@R: c(
            role = c("aut"), 
            comment = c(ORCID = "0000-0002-7858-0231")))
 Description: The goal of `tpSVG` is to detect and visualize spatial variation in
-the gene expression for spatially resolved transcriptomics data analysis.
-Specifically, `tpSVG` introduces a family of count-based models, with 
-generalizable parametric assumptions such as Poisson distribution or 
-negative binomial distribution. In addition, comparing to currently 
-available count-based model for spatially resolved data analysis, the 
-`tpSVG` models improves computational time, and hence greatly improves 
-the applicability of count-based models in SRT data analysis. 
+  the gene expression for spatially resolved transcriptomics data analysis.
+  Specifically, `tpSVG` introduces a family of count-based models, with 
+  generalizable parametric assumptions such as Poisson distribution or 
+  negative binomial distribution. In addition, comparing to currently 
+  available count-based model for spatially resolved data analysis, the 
+  `tpSVG` models improves computational time, and hence greatly improves 
+  the applicability of count-based models in SRT data analysis. 
 License: MIT + file LICENSE
 URL: https://github.com/boyiguo1/tpSVG
 BugReports: https://github.com/boyiguo1/tpSVG/issues
