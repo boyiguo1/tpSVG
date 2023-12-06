@@ -22,7 +22,7 @@ devtools::install_github("boyiguo1/tpSVG")
 
 ## Tutorial
 
-Please find an end-to-end tutorial at https://boyi-guo.com/tpSVG/
+Please find an end-to-end tutorial at https://boyi-guo.com/tpSVG/articles/intro_to_tpSVG.html.
 
 
 
@@ -34,6 +34,8 @@ __Implementation Questions__
 
   _As of `tpSVG v0.99.1`, the data structure `tpSVG` supports includes [`SpatialExperiments`](https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html) (and packages extending `SpatialExperiments`, e.g.  [`SpatialFeatureExperiments`](https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html)) and `data.frame`. Please find example via [supported_data_structure](https://boyi-guo.com/escheR/articles/supported_data_structure.html). Due to limited resources, we regret that we won't provides direct accessibility to other pipelines, e.g. `suerat`._
 
+* What types of spatially-resolved transcriptomics (SRT) data that `tpSVG` supports?
+Both sequenced-based SRT and image-based SRT are supported by `tpSVG`. For more details, please refer to xxx.
 
 
 
