@@ -19,6 +19,32 @@ library(tpSVG)
 ```
 
 
+## image-based SRT in `SpatialExperiment` (e.g. `SpatialFeatureExperiment`)
+```{r}
+library(STexampleData)
+spe <- seqFISH_mouseEmbryo()
+
+spe
+```
+
+What is the dataset and the dimension of it.
+
+```{r}
+# Calculate "library size"
+spe$total <- counts(spe) |> colSums()
+
+
+idx_gene <- which(rowData(spe)$gene_name %in% c("Sox2", "Hand1", "Gata5"))
+
+
+tp_spe <- tpSVG(input = spe[idx_gene,],
+             family = poisson(),
+             offset = log(spe$total),
+             assay_name = "counts")
+```
+
+
+
 ## `Data.Frame`
 [TODO: to be added]
 
