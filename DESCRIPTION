@@ -50,5 +50,9 @@ Suggests:
     nnSVG,
     rmarkdown,
     scran,
-    STexampleData
+    scuttle,
+    STexampleData,
+    escheR,
+    ggpubr,
+    colorspace
 VignetteBuilder: knitr
