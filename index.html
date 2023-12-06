@@ -117,14 +117,14 @@
 <p><em>As of <code>tpSVG v0.99.1</code>, the data structure <code>tpSVG</code> supports includes <a href="https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html" class="external-link"><code>SpatialExperiments</code></a> (and packages extending <code>SpatialExperiments</code>, e.g. <a href="https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html" class="external-link"><code>SpatialFeatureExperiments</code></a>) and <code>data.frame</code>. Please find example via <a href="https://boyi-guo.com/escheR/articles/supported_data_structure.html" class="external-link">supported_data_structure</a>. Due to limited resources, we regret that we won’t provides direct accessibility to other pipelines, e.g. <code>suerat</code>.</em></p>
 </li>
 <li><p>What types of spatially-resolved transcriptomics (SRT) data that <code>tpSVG</code> supports? Both sequenced-based SRT and image-based SRT are supported by <code>tpSVG</code>. For more details, please refer to xxx.</p></li>
+<li><p>Can I use other scale factor as offset in the count-model?</p></li>
 </ul>
+<p><em>Yes, just remember to take log for the offset term. In the vignettes, the offset of the model is default to library size, i.e. the total number of molecular in a spot/cell, but the count models should be compatible to other definition of scale factor in theory.</em></p>
 <p><strong>Theoretical Questions</strong></p>
 <ul>
 <li>
 <p>What is the difference between modeling normalized data and count-based model?</p>
 <p><em>[TODO: revise this section] and of spatial count-based model the to provide convinience in practice, to directly model the gene expression in its natural form, in contrast to additional arithmetic transformation, e.g. log transformation, that could introduce additional bias in the analysis. As a result, <code>tpSVG</code></em></p>
-</li>
-<li>
 </li>
 <li>
 </li>
