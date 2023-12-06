@@ -1,0 +1,12 @@
+citHeader("To cite escheR in publications use:")
+
+bibentry(
+  bibtype  = "Software",
+  title    = "tpSVG",
+  author   = personList(
+              as.person("Boyi Guo"),
+              as.person("Lukas M. Weber"),
+              as.person("Stephanie C. Hicks")
+         ),
+  journal  = "R package version 0.99.1"
+)
