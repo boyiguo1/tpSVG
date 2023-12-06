@@ -4,4 +4,6 @@
 ^\.github$
 ^_pkgdown.yml$
 
+pkgdown
+
 temp_fld

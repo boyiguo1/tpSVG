@@ -1,5 +1,5 @@
 
-# tpSVG <img src="inst/figures/hexgon_sticker.png" align="right" height="139" alt="" />
+# tpSVG <img src="logo.png" align="right" height="139" alt="" />
 
 
 <!-- badges: start -->
