@@ -54,5 +54,6 @@ Suggests:
     STexampleData,
     escheR,
     ggpubr,
-    colorspace
+    colorspace,
+    BumpyMatrix
 VignetteBuilder: knitr
