@@ -99,8 +99,30 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
+<div class="section level3">
+<h3 id="github">GitHub<a class="anchor" aria-label="anchor" href="#github"></a>
+</h3>
 <p>You can install the development version of tpSVG from <a href="https://github.com/boyiguo1/tpSVG" class="external-link">GitHub</a> with:</p>
-<p><code>{r} # install.packages("devtools") devtools::install_github("boyiguo1/tpSVG")</code></p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"boyiguo1/tpSVG"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="bioconductor-pending">Bioconductor (pending)<a class="anchor" aria-label="anchor" href="#bioconductor-pending"></a>
+</h3>
+<p>The package is currently submitted to Bioconductor for <a href="https://github.com/Bioconductor/Contributions/issues/3264" class="external-link">review</a>. Once the package is accepted by Bioconductor, you can install the latest release version of <code>tpSVG</code> from Bioconductor via the following code. Additional details are shown on the Bioconductor page.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># NOTE: The package is under-review with bioconductor.</span></span>
+<span><span class="co">#       The following code section will work once the package is accepted.</span></span>
+<span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"tpSVG"</span><span class="op">)</span></span></code></pre></div>
+<p>The latest development version can also be installed from the <code>devel</code> version of Bioconductor or from GitHub following</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span>version<span class="op">=</span><span class="st">'devel'</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="tutorial">Tutorial<a class="anchor" aria-label="anchor" href="#tutorial"></a>
@@ -116,17 +138,20 @@
 <p>What are the data structures that <code>tpSVG</code> current supports?</p>
 <p><em>As of <code>tpSVG v0.99.1</code>, the data structure <code>tpSVG</code> supports includes <a href="https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html" class="external-link"><code>SpatialExperiments</code></a> (and packages extending <code>SpatialExperiments</code>, e.g. <a href="https://bioconductor.org/packages/release/bioc/html/SpatialFeatureExperiment.html" class="external-link"><code>SpatialFeatureExperiments</code></a>) and <code>data.frame</code>. Please find example via <a href="https://boyi-guo.com/escheR/articles/supported_data_structure.html" class="external-link">supported_data_structure</a>. Due to limited resources, we regret that we won’t provides direct accessibility to other pipelines, e.g. <code>suerat</code>.</em></p>
 </li>
-<li><p>What types of spatially-resolved transcriptomics (SRT) data that <code>tpSVG</code> supports? Both sequenced-based SRT and image-based SRT are supported by <code>tpSVG</code>. For more details, please refer to xxx.</p></li>
-<li><p>Can I use other scale factor as offset in the count-model?</p></li>
-</ul>
+<li>
+<p>What types of spatially-resolved transcriptomics (SRT) data that <code>tpSVG</code> supports?</p>
+<p><em>Both sequenced-based SRT and image-based SRT data are supported by <code>tpSVG</code>. For more details, please refer to the vignette [supported_data_structure]](<a href="https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment" class="external-link uri">https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment</a>).</em></p>
+</li>
+<li>
+<p>Can I use other scale factor as offset in the count-model?</p>
 <p><em>Yes, just remember to take log for the offset term. In the vignettes, the offset of the model is default to library size, i.e. the total number of molecular in a spot/cell, but the count models should be compatible to other definition of scale factor in theory.</em></p>
+</li>
+</ul>
 <p><strong>Theoretical Questions</strong></p>
 <ul>
 <li>
-<p>What is the difference between modeling normalized data and count-based model?</p>
-<p><em>[TODO: revise this section] and of spatial count-based model the to provide convinience in practice, to directly model the gene expression in its natural form, in contrast to additional arithmetic transformation, e.g. log transformation, that could introduce additional bias in the analysis. As a result, <code>tpSVG</code></em></p>
-</li>
-<li>
+<p>What is the difference between modeling log transformed data and count data?</p>
+<p><em>Count data is the natural form of gene expression data when it is collected and quantified. While log-transformation providess shortcuts to model (normalized) count data using well-studied Gaussian distribution, it distorts the lowly expressed gene and causes analytic biases.</em></p>
 </li>
 </ul>
 </div>
