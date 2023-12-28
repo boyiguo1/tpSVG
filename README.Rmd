@@ -40,7 +40,7 @@ The package is currently submitted to Bioconductor for [review](https://github.c
 is accepted by Bioconductor, you can install the latest release
 version of `tpSVG` from Bioconductor via the following code. Additional details
 are shown on the Bioconductor page.
-```{r eval = FALSE}
+```{r install_bioc, eval = FALSE}
 # NOTE: The package is under-review with bioconductor.
 #       The following code section will work once the package is accepted.
 
@@ -53,7 +53,7 @@ BiocManager::install("tpSVG")
 The latest development version can also be installed from the `devel` version
 of Bioconductor or from GitHub following
 
-```{r eval = FALSE}
+```{r install_bioc_dev,eval = FALSE}
 BiocManager::install(version='devel')
 ```
 
@@ -74,13 +74,14 @@ __Implementation Questions__
 
 * What types of spatially-resolved transcriptomics (SRT) data that `tpSVG` supports?
 
-  _Both sequenced-based SRT and image-based SRT are supported by `tpSVG`.
+  _Both sequenced-based SRT and image-based SRT data are supported by `tpSVG`.
 For more details, please refer to the vignette [supported_data_structure]](https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment)._
 
 
 * Can I use other scale factor as offset in the count-model?
 
   _Yes, just remember to take log for the offset term. In the vignettes, the offset of the model is default to library size, i.e. the total number of molecular in a spot/cell, but the count models should be compatible to other definition of scale factor in theory._
+
 
 
 __Theoretical Questions__

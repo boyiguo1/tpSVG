@@ -80,7 +80,7 @@ Please find an end-to-end tutorial at
 - What types of spatially-resolved transcriptomics (SRT) data that
   `tpSVG` supports?
 
-  *Both sequenced-based SRT and image-based SRT are supported by
+  *Both sequenced-based SRT and image-based SRT data are supported by
   `tpSVG`. For more details, please refer to the vignette
   \[supported_data_structure\]\](<https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment>).*
 
