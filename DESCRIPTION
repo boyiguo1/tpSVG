@@ -55,5 +55,6 @@ Suggests:
     escheR,
     ggpubr,
     colorspace,
-    BumpyMatrix
+    BumpyMatrix,
+    sessioninfo
 VignetteBuilder: knitr
