@@ -1,0 +1,884 @@
+---
+title: "Gene Imputation"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE,warning = FALSE)
+
+```
+
+
+## Load library
+```{r load_lib, message=FALSE}
+suppressMessages({
+  library(SpatialExperiment)
+  library(STexampleData)
+  library(scuttle)
+  library(mgcv)
+  library(escheR)
+  library(ggpubr)
+  library(colorspace)
+})
+```
+
+## Data prep
+```{r data_prep}
+raw_spe <- Visium_humanDLPFC()
+
+# Calculate mito ratio
+is_mito <- grepl("(^MT-)|(^mt-)", rowData(raw_spe)$gene_name)
+raw_spe <- addPerCellQC(raw_spe, subsets = list(mito = is_mito))
+```
+
+#### Mito Proportion Plot
+```{r mt_prop}
+raw_spe |> 
+  make_escheR() |> 
+  add_fill("subsets_mito_percent")
+```
+
+#### UMI plot
+```{r umi}
+raw_spe |> 
+  make_escheR() |> 
+  add_fill("total")
+```
+
+
+
+* Calculate lib size nomalized, log normalized gene counts
+* Subset genes
+* Subset spots
+
+```{r subset data}
+spe <- raw_spe[, colData(raw_spe)$in_tissue == 1]
+
+# Create normalized data
+spe <- logNormCounts(spe, log = FALSE)
+# Create log normalized data
+spe <- logNormCounts(spe)
+assay(spe, "logcounts_0.1") <- normalizeCounts(spe, pseudo.count = 0.1)
+assay(spe, "logcounts_0.5") <- normalizeCounts(spe, pseudo.count = 0.5)
+
+
+
+
+# Calculate library size
+spe$total <- counts(spe) |> colSums()
+
+# Smaller set of genes
+idx <- which(
+  rowData(spe)$gene_name %in% c("MOBP", "PCP4", "SNAP25",
+                                "HBB", "IGKC", "NPY")
+)
+spe <- spe[idx, ]
+
+idx_complete_case <- complete.cases(spe$ground_truth)
+spe$WM <- factor(spe$ground_truth) |> 
+      forcats::fct_collapse(
+        `Non WM` = c("Layer1", "Layer2", "Layer3",
+                     "Layer4", "Layer5", "Layer6")
+      )
+# If multiple covariates
+# idx_complete_case <- complete.cases(spe$ground_truth, spe$cell_count)
+
+spe <- spe[, idx_complete_case]
+```
+
+### QC Sample
+
+
+
+
+#MOBP Gene Expression
+
+```{r}
+idx_MOBP <- which(rowData(spe)$gene_name %in% "MOBP")
+
+coords <- spatialCoords(spe)
+colnames(coords) <- c("coord_x", "coord_y")
+fit.df <- data.frame(
+  coords
+)
+
+fit.df$raw_counts <- counts(spe)[idx_MOBP,]
+fit.df$norm_counts <- assay(spe, "normcounts")[idx_MOBP,]
+fit.df$log_counts <- logcounts(spe)[idx_MOBP,]
+fit.df$log_counts_0.1 <- assay(spe, "logcounts_0.1")[idx_MOBP,]
+fit.df$log_counts_0.5 <-  assay(spe, "logcounts_0.5")[idx_MOBP,]
+```
+
+$norm_counts$ = counts $/$ sizeFactor.
+The formula for Log normalized count is $log_counts = log_2(norm_counts+c)$, where $c=1$.
+
+#### Fitting a poisson model accounting for lib size
+
+```{r poisson_model}
+poisson_mdl <- gam(
+  formula = raw_counts~s(coord_x, coord_y, bs='tp'),
+  family = poisson, data = fit.df,
+  # TODO: is it better to use sizeFactor to be offset or use lib size,
+  # my guess is that it souldn't matter except that the intercept estimation is different. 
+  offset = log(spe$sizeFactor))
+
+poisson_pred <- predict(poisson_mdl, type = "response")
+spe$poisson_pred <- poisson_pred |> c()
+```
+
+#### Fitting a Gaussian model accounting for lognorm data
+
+```{r gaus_model}
+gaus_mdl <- gam(
+  formula = log_counts~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+gaus_pred <- predict(gaus_mdl, type = "response")
+tmp_gaus_pred <- predict(gaus_mdl, type = "terms")
+spe$margin_gaus_spatialVar <- tmp_gaus_pred[, "s(coord_x,coord_y)"] |> exp()
+# Convert back to count scale
+
+spe$gaus_pred <- gaus_pred |> exp() |> c()
+```
+
+## Analyze MOBP Prediction
+
+* MSE for poisson is `r sum((fit.df$norm_counts - spe$poisson_pred)^2)`
+* MSE for guas is `r sum((fit.df$norm_counts - spe$gaus_pred)^2)`
+
+#### Visualize predictions
+
+just be careful that the range are different for each plots.
+
+Overall patter, Poisson is more spread out than gaus.
+
+```{r}
+spe$norm_counts <- fit.df$norm_counts
+ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("norm_counts", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "norm counts"),
+  
+  spe |> make_escheR() |> 
+    add_fill("poisson_pred", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "poisson", y = "Var of res"),
+  spe |> make_escheR() |> 
+    add_fill("gaus_pred", point_size = 1.5)+ 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "gaus", y = "Var of res"),
+  nrow = 1
+)
+```
+
+#### Study of residual
+Gaus model systematically overestimates the normalized counts at the count scale
+
+```{r calculate_res}
+spe$pois_res <- fit.df$norm_counts - spe$poisson_pred
+spe$gaus_res <- fit.df$norm_counts - spe$gaus_pred
+```
+
+_If the residual have spatial pattern_
+
+```{r test_residual}
+pois_res_mdl <- gam(
+  formula = spe$pois_res~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+summary(pois_res_mdl)
+```
+
+There's no strong evidence indicating a spatial pattern in the residual of Poisson predicted gene expression
+
+
+```{r}
+gaus_res_mdl <- gam(
+  formula = spe$gaus_res~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+summary(gaus_res_mdl)
+```
+
+There's strong evidence indicating a spatial pattern still exists.
+
+
+_The mean of residual_
+
+```{r}
+ggarrange(
+  # spe |> make_escheR() |> 
+  # add_fill("norm_counts", point_size = 1.5) + 
+  # scale_fill_continuous_divergingx(
+  #   palette = 'RdBu'
+  # ) +
+  # labs(title = "norm counts"),
+  
+  spe |> make_escheR() |> 
+    add_fill("pois_res", point_size = 1.5) |> 
+    add_ground("WM", point_size = 1.5, stroke=0.5) +
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "lightgrey"
+      )
+    ) +
+    labs(title = "poisson"),
+  spe |> make_escheR() |> 
+    add_fill("gaus_res", point_size = 1.5)|> 
+    add_ground("WM", point_size = 1.5, stroke=0.5) +
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "lightgrey"
+      )
+    ) +
+    labs(title = "gaus"),
+  nrow = 1
+)
+```
+
+
+
+Mean variance relationship
+
+```{r}
+ggarrange(
+  # spe |> make_escheR() |> 
+  # add_fill("norm_counts", point_size = 1.5) + 
+  # scale_fill_continuous_divergingx(
+  #   palette = 'RdBu'
+  # ) +
+  # labs(title = "norm counts"),
+  
+  ggplot(spe |> colData() |> data.frame())+
+    geom_point(aes(x = norm_counts, y = pois_res))+
+    geom_smooth(aes(x = norm_counts, y = pois_res))+
+    labs(title = "poisson"),
+  ggplot(spe |> colData() |> data.frame())+
+    geom_point(aes(x = norm_counts, y = gaus_res))+
+    geom_smooth(aes(x = norm_counts, y = gaus_res))+
+    labs(title = "poisson"),
+  nrow = 1
+)
+
+```
+
+The variance of residual
+
+```{r}
+ggarrange(
+  # spe |> make_escheR() |> 
+  # add_fill("norm_counts", point_size = 1.5) + 
+  # scale_fill_continuous_divergingx(
+  #   palette = 'RdBu'
+  # ) +
+  # labs(title = "norm counts"),
+  
+  ggplot(spe |> colData() |> data.frame(),
+         aes(x = norm_counts, y = pois_res))+
+    stat_summary_bin(fun.y = "var", geom="point", bins = 50) +
+    labs(title = "poisson"),
+  ggplot(spe |> colData() |> data.frame(),
+         aes(x = norm_counts, y = gaus_res))+
+    stat_summary_bin(fun.y = "var", geom="point", bins = 50) +
+    labs(title = "gaus"),
+  nrow = 1
+)
+
+```
+
+### Would be the spatial inference similar
+
+```{r cal_sp_pattern}
+poisson_tp_term <- predict(poisson_mdl, type = "terms")
+gaus_tp_term <- predict(gaus_mdl, type = "terms")
+
+spe$poisson_tp_term <- poisson_tp_term[, "s(coord_x,coord_y)"]
+spe$gaus_tp_term <- gaus_tp_term[, "s(coord_x,coord_y)"]
+```
+
+```{r}
+
+spe$diff_mdls_log <- spe$gaus_tp_term - spe$poisson_tp_term
+spe$diff_mdls_count <- exp(spe$gaus_tp_term) - exp(spe$poisson_tp_term)
+
+
+
+
+ggarrange(
+  # spe |> make_escheR() |> 
+  # add_fill("norm_counts", point_size = 1.5) + 
+  # scale_fill_continuous_divergingx(
+  #   palette = 'RdBu'
+  # ) +
+  # labs(title = "norm counts"),
+  
+  spe |> make_escheR() |> 
+    add_fill("poisson_tp_term", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "poisson"),
+  spe |> make_escheR() |> 
+    add_fill("poisson_tp_term", point_size = 1.5)+ 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "gaus"),
+  
+  spe |> make_escheR() |> 
+    add_fill("diff_mdls_log", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu'
+    ) +
+    labs(title = "gaus-poisson"),
+  
+  spe |> make_escheR() |> 
+    add_fill("poisson_tp_term", point_size = 1.5) |> 
+       add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_continuous_divergingx(
+      trans = "exp",
+      palette = 'RdBu'
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "black"
+      )
+    ) +
+    labs(title = "poisson"),
+  spe |> make_escheR() |> 
+    add_fill("gaus_tp_term", point_size = 1.5) |>  
+    add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_continuous_divergingx(
+      trans = "exp",
+      palette = 'RdBu'
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "black"
+      )
+    ) +
+    labs(title = "gaus"),
+  
+  # spe |> make_escheR() |>
+  #   add_fill("diff_mdls_count", point_size = 1.5) +
+  #   scale_fill_continuous_divergingx(
+  #     palette = 'RdBu'
+  #   ) +
+  #   labs(title = "gaus-poisson"),
+  
+    spe |> make_escheR() |>
+    add_fill("diff_mdls_count", point_size = 1.5) |> 
+    add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_gradient(
+      low = "blue",
+      high = "white"
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "black"
+      )
+    ) +
+    labs(title = "gaus-poisson"),
+  
+  
+  
+  
+  nrow = 2,
+  ncol = 3
+)
+
+```
+
+Where there is any difference?
+
+```{r explain_pred_diff}
+thres_hold <- 2.5
+spe$pred_count_diff_spots <- factor(abs(spe$diff_mdls_count)>=thres_hold)
+spe$counts_diff <- fit.df$norm_counts - fit.df$raw_counts
+ spe |> make_escheR() |> 
+   add_fill(var = "counts_diff", point_size = 1.5) |> 
+    add_ground("pred_count_diff_spots", point_size = 1.5, stroke = 0.3) + 
+    # scale_fill_gradient(low = "white", high = "black") +
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu',
+      mid = 0
+    ) +
+    scale_color_manual(
+      values = c(
+        "FALSE" = "transparent",
+        "true" = "grey"
+      )
+  )  +
+    labs(title = paste0("|diff_count|>=", thres_hold))
+```
+
+#### Spatial Clustering using the tp term
+
+_BayesSpace_ doesn't seem to work.
+
+```{r eval = FALSE}
+library(BayesSpace)
+spe$poisson_tp_term <- poisson_tp_term[, "s(coord_x,coord_y)"]
+spe$gaus_tp_term <- gaus_tp_term[, "s(coord_x,coord_y)"]
+spe$row <- spe$array_row
+spe$col <- spe$array_col
+
+reducedDim(spe, "poisson_tp") <- matrix(spe$poisson_tp_term, ncol = 1)
+reducedDim(spe, "gaus_tp_term") <- matrix(spe$gaus_tp_term, ncol = 1)
+
+metadata(spe)$BayesSpace.data <- list(platform = "Visium", is.enhanced = FALSE)
+set.seed(030122)
+
+spe <- spatialCluster(spe, q = 2, use.dimred = "poisson_tp", d = 1, nrep = 10000)
+spe <- spatialCluster(spe, q = 2, use.dimred = "gaus_tp_term", d = 1, nrep = 10000)
+```
+
+
+#### Different pseudocounts
+
+```{r}
+log_0.1_mdl <- gam(
+  formula = log_counts_0.1~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+log_0.1_pred <- predict(log_0.1_mdl, type = "terms")
+spe$log_0.1_tp <- log_0.1_pred[, "s(coord_x,coord_y)"] |> exp()
+spe$log_0.1_pred <- predict(log_0.1_mdl, type = "response") |> c() |> exp()
+
+
+
+
+
+log_0.5_mdl <- gam(
+  formula = log_counts_0.5~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+log_0.5_pred <- predict(log_0.5_mdl, type = "terms")
+spe$tmp_log_0.5_tp <- log_0.5_pred[, "s(coord_x,coord_y)"]|> c()
+spe$log_0.5_tp <- log_0.5_pred[, "s(coord_x,coord_y)"] |> exp()
+spe$log_0.5_pred <- predict(log_0.5_mdl, type = "response") |> c() |> exp()
+
+spe$pred_diff_log_0.5 <- spe$log_0.5_pred - spe$gaus_pred
+spe$pred_diff_log_0.1 <- spe$log_0.1_pred - spe$gaus_pred
+spe$pred_diff_log <- spe$log_0.1_pred - spe$log_0.5_pred
+
+
+spe$diff_0.1_count <- spe$log_0.1_tp - exp(spe$poisson_tp_term)
+spe$diff_0.5_count <- spe$log_0.5_tp - exp(spe$poisson_tp_term)
+
+
+   spe |> make_escheR() |>
+    add_fill("tmp_log_0.5_tp", point_size = 1.5) +
+    # add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_gradient(
+      low = "blue",
+      high = "white"
+    ) +
+    # scale_color_manual(
+    #   values = c(
+    #     `Non WM` = "transparent",
+    #     `WM` = "black"
+    #   )
+    # ) +
+    labs(title = "gaus-poisson")
+
+
+
+   # spe |> make_escheR() |>
+   #  add_fill("log_0.5_tp", point_size = 1.5) |> 
+   #  add_ground("WM", point_size = 1.5, stroke =0.2) +
+   #  scale_fill_gradient(
+   #    low = "white",
+   #    high = "blue"
+   #  ) +
+   #  scale_color_manual(
+   #    values = c(
+   #      `Non WM` = "transparent",
+   #      `WM` = "black"
+   #    )
+   #  ) +
+   #  labs(title = "gaus-poisson")
+
+```
+
+
+
+
+```{r}
+log_0.1_mdl <- gam(
+  formula = log_counts_0.1~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+log_0.1_pred <- predict(log_0.1_mdl, type = "terms")
+spe$log_0.1_tp <- log_0.1_pred[, "s(coord_x,coord_y)"] |> exp()
+
+
+
+log_0.5_mdl <- gam(
+  formula = log_counts_0.5~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+log_0.5_pred <- predict(log_0.5_mdl, type = "terms")
+spe$log_0.5_tp <- log_0.5_pred[, "s(coord_x,coord_y)"] |> exp()
+
+
+spe$diff_0.1_count <- spe$log_0.1_tp - exp(spe$poisson_tp_term)
+spe$diff_0.5_count <- spe$log_0.5_tp - exp(spe$poisson_tp_term)
+
+
+   spe |> make_escheR() |>
+    add_fill("log_0.1_tp", point_size = 1.5) |> 
+    add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_gradient(
+      low = "white",
+      high = "blue"
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "black"
+      )
+    ) +
+    labs(title = "gaus-poisson")
+
+
+
+   spe |> make_escheR() |>
+    add_fill("log_0.5_tp", point_size = 1.5) |> 
+    add_ground("WM", point_size = 1.5, stroke =0.2) +
+    scale_fill_gradient(
+      low = "white",
+      high = "blue"
+    ) +
+    scale_color_manual(
+      values = c(
+        `Non WM` = "transparent",
+        `WM` = "black"
+      )
+    ) +
+    labs(title = "gaus-poisson")
+
+```
+
+
+
+
+
+
+```{r not_very_useful, eval = FALSE, echo = FALSE,}
+spe$log_counts <- fit.df$log_counts
+# spe$norm_counts
+spe |> make_escheR() |> 
+   add_fill(var = "log_counts", point_size = 1.5) + 
+    # scale_fill_gradient(low = "white", high = "black") +
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu',
+      mid = 1
+    )
+
+spe |> make_escheR() |> 
+   add_fill(var = "norm_counts", point_size = 1.5) + 
+    # scale_fill_gradient(low = "white", high = "black") +
+    scale_fill_continuous_divergingx(
+      palette = 'RdBu',
+      mid = 1
+    ) +
+    scale_color_manual(
+      values = c(
+        "FALSE" = "transparent",
+        "true" = "grey"
+      )
+  )  +
+    labs(title = paste0("|diff_count|>=", thres_hold))
+```
+
+
+
+```{r archived, eval = FALSE, echo =FALSE}
+spe |> make_escheR() |> 
+  add_fill("margin_spatialVar", point_size = 1.5)+
+  scale_fill_continuous(type = "viridis")
+
+fit.df$tmp_y_log <- logcounts(spe)[idx_MOBP,]
+
+tp_gaus_mdl <- gam(
+  formula = tmp_y_log~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+tmp_gaus_pred <- predict(tp_gaus_mdl, type = "terms")
+spe$margin_gaus_spatialVar <- tmp_gaus_pred[, "s(coord_x,coord_y)"] |> exp()
+
+spe |> make_escheR() |> 
+  add_fill("margin_gaus_spatialVar", point_size = 1.5)+
+  scale_fill_continuous(type = "viridis")
+
+library(colorspace)
+
+spe$diff_poisson <- fit.df$norm_counts - spe$margin_spatialVar
+spe$diff_gaus <- fit.df$norm_counts - spe$margin_gaus_spatialVar
+spe$norm_counts <- fit.df$norm_counts
+
+sum(spe$diff_poisson^2)
+sum(spe$diff_gaus^2)
+
+
+ggpubr::ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("diff_poisson", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(limits = c(
+      min(spe$diff_poisson, spe$diff_gaus),
+      max(spe$diff_poisson, spe$diff_gaus)
+    ), palette = 'RdBu', mid = 0)+
+    labs(title = "diff_poisson"),
+  # scale_fill_continuous(min = -17, max = 9)
+  
+  spe |> make_escheR() |> 
+    add_fill("diff_gaus", point_size = 1.5)  + 
+    scale_fill_continuous_divergingx(limits = c(
+      min(spe$diff_poisson, spe$diff_gaus),
+      max(spe$diff_poisson, spe$diff_gaus)
+    ), palette = 'RdBu', mid = 0) +
+    labs(title = "diff_gaus"),
+  common.legend = TRUE,
+  legend = "bottom"
+)
+
+ggplot(colData(spe) |> data.frame()) +
+  geom_point(aes(x = norm_counts, y = diff_poisson)) +
+  geom_smooth(aes(x = norm_counts, y = diff_poisson))
+
+ggplot(colData(spe) |> data.frame()) +
+  geom_point(aes(x = norm_counts, y = diff_gaus)) +
+  geom_smooth(aes(x = norm_counts, y = diff_gaus))
+
+spe |> make_escheR() |> 
+  add_fill("norm_counts", point_size = 1.5) + 
+  scale_fill_continuous_divergingx(
+    palette = 'RdBu', mid = mean(spe$norm_counts)
+  )
+
+
+spe |> make_escheR() |> 
+  add_fill("margin_spatialVar", point_size = 1.5) + 
+  scale_fill_continuous_divergingx(
+    palette = 'RdBu'
+  )
+
+spe |> make_escheR() |> 
+  add_fill("margin_gaus_spatialVar", point_size = 1.5)+ 
+  scale_fill_continuous_divergingx(
+    palette = 'RdBu'
+  )
+
+
+
+spe$diff <- spe$margin_gaus_spatialVar - spe$margin_spatialVar
+spe |> make_escheR() |> 
+  add_fill("diff", point_size = 1.5) + 
+  scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0)
+
+
+spe |> make_escheR() |> 
+  add_fill("total", point_size = 1.5) +
+  scale_fill_continuous(trans = "log10")+ 
+  scale_fill_continuous_divergingx(palette = 'RdBu')
+
+
+fit.df$total <- spe$total 
+
+total_mdl <- gam(
+  formula = total~s(coord_x, coord_y, bs='tp'),
+  family = gaussian, data = fit.df)
+
+total_pred <- predict(total_mdl)
+spe$total_pred <- total_pred |> c()
+
+
+ggpubr::ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("total_pred", point_size = 1.5)+
+    # scale_fill_continuous(trans = "log")+ 
+    scale_fill_continuous_divergingx(palette = 'RdBu', mid = 5000),
+  spe |> make_escheR() |> 
+    add_fill("diff", point_size = 1.5) + 
+    scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0)
+)
+
+
+
+
+
+plot(total_mdl, se = FALSE, main = "lib size")
+
+
+filled.contour(fit.df$coord_x, fit.df$coord_y, spe$total_pred)
+
+spe |> make_escheR() |> 
+  add_fill("total", point_size = 1.5)+
+  # scale_fill_continuous(trans = "log10")+ 
+  scale_fill_continuous_divergingx(palette = 'RdBu', mid = 5000)
+```
+
+
+
+## Gene expression interpolationg/prediction
+
+```{r}
+# TODO: need to implement interface for this
+coords <- spatialCoords(spe)
+colnames(coords) <- c("coord_x", "coord_y")
+fit.df <- data.frame(
+  coords,
+  X=x
+)
+
+idx_MOBP <- which(rowData(spe)$gene_name %in% "MOBP")
+
+fit.df$tmp_y <- counts(spe)[idx_MOBP,]
+
+tp_mdl <- gam(
+  formula = tmp_y~s(coord_x, coord_y, bs='tp'),
+  family = poisson, data = fit.df,
+  offset = log(spe$total))
+anova(tp_mdl)
+
+tmp_pred <- predict(tp_mdl, type = "terms")
+spe$margin_spatialVar <- tmp_pred[, "s(coord_x,coord_y)"]
+
+
+library(escheR)
+
+spe |> make_escheR() |> 
+    add_fill("margin_spatialVar", point_size = 1.5)+
+  scale_fill_continuous(type = "viridis")
+
+fit.df$tmp_y_log <- logcounts(spe)[idx_MOBP,]
+
+tp_gaus_mdl <- gam(
+  formula = tmp_y~s(coord_x, coord_y, bs='tp'),
+  family = gaussian(), data = fit.df,
+  offset = log(spe$total))
+
+```
+
+
+### Covariates model
+```{r}
+# TODO: need to implement interface for this
+coords <- spatialCoords(spe)
+colnames(coords) <- c("coord_x", "coord_y")
+fit.df <- data.frame(
+  coords,
+  X=x
+)
+
+idx_MOBP <- which(rowData(spe)$gene_name %in% "MOBP")
+
+fit.df$tmp_y <- counts(spe)[idx_MOBP,]
+
+tp_cov_mdl <- gam(
+  formula = tmp_y~s(coord_x, coord_y, bs='tp') + X ,
+  family = poisson, data = fit.df,
+  offset = log(spe$total))
+anova(tp_cov_mdl)
+
+tmp_cov_pred <- predict(tp_cov_mdl, type = "terms")
+spe$cov_spatialVar <- tmp_cov_pred[, "s(coord_x,coord_y)"]
+spe$covVar <- tmp_cov_pred[, "X"]
+
+
+spe$MOBP_normcount <- assay(spe, "normcounts")[idx_MOBP,]
+spe$MOBP_count <- assay(spe, "counts")[idx_MOBP,]
+spe$MOBP_diff <- spe$MOBP_normcount - spe$MOBP_count
+
+
+library(escheR)
+library(ggpubr)
+library(colorspace)
+# Norm counts vs counts
+ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("MOBP_normcount", point_size = 1.5) + 
+    theme(legend.position="bottom"),
+  spe |> make_escheR() |> 
+    add_fill("MOBP_count", point_size = 1.5) + 
+    theme(legend.position="bottom"),
+  # Norm - count
+  spe |> make_escheR() |> 
+    add_fill("MOBP_diff", point_size = 1.5) + 
+    theme(legend.position="bottom") + 
+    scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0),
+  nrow = 1
+)
+
+#Change seems to be more drastic on the log scale than count scale
+
+ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("cov_spatialVar", point_size = 1.5) ,
+    spe |>
+make_escheR() |> 
+  add_fill("cov_spatialVar", point_size = 1.5) +
+  scale_fill_continuous(trans = "exp", type = "viridis")
+)
+
+
+spe$pred_diff <- exp(spe$margin_spatialVar) - exp(spe$cov_spatialVar)
+
+
+ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("margin_spatialVar", point_size = 1.5)+
+  scale_fill_continuous(trans = "exp", type = "viridis"),
+  spe |> make_escheR() |> 
+  add_fill("cov_spatialVar", point_size = 1.5) +
+  scale_fill_continuous(trans = "exp", type = "viridis"),
+  spe |> make_escheR() |> 
+     add_fill("pred_diff", point_size = 1.5) +
+    scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0)
+
+)
+
+
+
+
+
+ggarrange(
+  spe |> make_escheR() |> 
+    add_fill("ground_truth", point_size = 1.5),
+  spe |> make_escheR() |> 
+    add_fill("MOBP_normcount", point_size = 1.5),
+  spe |> make_escheR() |> 
+    add_fill("covVar", point_size = 1.5) +
+  scale_fill_continuous(trans = "exp", type = "viridis"),
+    spe |>
+make_escheR() |> 
+  add_fill("cov_spatialVar", point_size = 1.5) +
+  scale_fill_continuous(trans = "exp", type = "viridis")
+)
+```
+
+
+
+\newpage
+
+## Session info for reproducibility
+```{r session_info}
+sessioninfo::session_info()
+```
