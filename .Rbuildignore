@@ -9,3 +9,4 @@ pkgdown
 
 temp_fld
 
+^README\.Rmd$
