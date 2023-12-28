@@ -1,5 +1,8 @@
 ---
-title: "Introduction to tpSVG"
+title: "Introduction to `tpSVG`"
+author: 
+  - name: Boyi Guo
+    affiliation: "Johns Hopkins Bloomberg School of Public Health, Baltimore, MD, USA"
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{intro_to_tpSVG}
@@ -10,60 +13,95 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.small = TRUE,       # Reduce figure size
+  fig.retina = NULL       # Reduce figure size
 )
-```
-
-```{r setup}
-library(tpSVG)
 ```
 
 The objective of `tpSVG` is to detect spatially variable genes when analyzing spatially-resolved transcriptomics data. This includes both unsupervised features where there's not additional information is supplied besides the (normalized) gene counts and spatial coordinates, but also the spatial variation explained besides some covariates, such as tissue anatomy or possibly cell type composition. <!-- For any interested readers, please find our preprint describing the `tpSVG` models via bioRxiv [TODO: add link].  -->
 
 
 # Installation
+## GitHub
+You can install the development version of tpSVG from [GitHub](https://github.com/boyiguo1/tpSVG) with:
 
-The latest development version can be installed from GitHub following
-```{r eval = FALSE}
-if (!require("devtools")) install.packages("devtools")
+```{r install_github, eval=FALSE}
+# install.packages("devtools")
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
-> NOTE: we are working on finalizing the package and its submission to [Bioconductor](https://www.bioconductor.org/).
+## Bioconductor (pending)
+The package is currently submitted to Bioconductor for [review](https://github.com/Bioconductor/Contributions/issues/3264). Once the package
+is accepted by Bioconductor, you can install the latest release
+version of `tpSVG` from Bioconductor via the following code. Additional details
+are shown on the Bioconductor page.
+```{r install_bioc, eval = FALSE}
+if (!require("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+BiocManager::install("tpSVG")
+```
 
-<!-- You can install the latest release version of `tpSVG` from Bioconductor via the following code. Additional details are shown on the Bioconductor page. -->
+The latest development version can also be installed from the `devel` version
+of Bioconductor or from GitHub following
 
-<!-- if (!require("BiocManager", quietly = TRUE)) { -->
-<!--   install.packages("BiocManager") -->
-<!-- } -->
-<!-- BiocManager::install("tpSVG") -->
+```{r install_bioc_dev,eval = FALSE}
+BiocManager::install(version='devel')
+```
 
-<!-- The latest development version can also be installed from the `devel` version of Bioconductor or from GitHub following -->
+# Modeling spatially resolved gene expression using `tpSVG`
+In the following section, we demonstrate the how to use `tpSVG` with a [`SpatialExperiment`](https://bioconductor.org/packages/release/bioc/html/SpatialExperiment.html) object.
 
-<!-- if (!require("devtools")) install.packages("devtools") -->
-<!-- devtools::install_github("boyiguo1/tpSVG") -->
+## Load Packages
+To run the demonstration, there a couple of necessary packages to load. We will use the data set in [`STexampleData`](https://bioconductor.org/packages/STexampleData), which contains a 10x Visium dataset. Specifically, we will find one 10xVisium sample collected from the dorso lateral prefrontal region of a postmortem human brain from [`STexampleData`](https://bioconductor.org/packages/release/data/experiment/html/STexampleData.html) package, indexed by brain number of "151673" from [Maynard, Collado-Torres _et al_. (2021)](https://www.nature.com/articles/s41593-020-00787-0).  For more information, please see the vignettes of [`STexampleData`](https://bioconductor.org/packages/release/data/experiment/vignettes/STexampleData/inst/doc/STexampleData_overview.html)
 
-<!-- # `devel` version from Bioconductor -->
-<!-- BiocManager::install(version='devel') -->
-
-## Analyze gene expression counts using Poisson distribtuion
-```{r}
+```{r load_packages, message = FALSE}
+library(tpSVG)
 library(SpatialExperiment)
-library(STexampleData)
+library(STexampleData)          # Example data
+library(scuttle)                # Data preprocess
+```
 
+## Data processing
+Before running the analysis using `tpSVG`, we will preprocess the data, which
+includes 1) calculating normalization factor, or equivalently library size; 2) 
+down-sizing the number of genes to 6 to reduce running time. These preprocessing
+step may not be necessary if real world data analysis.
+```{r data_preprocess, message = FALSE}
 spe <- Visium_humanDLPFC()
 spe <- spe[, colData(spe)$in_tissue == 1]
+spe <- logNormCounts(spe)
 
-# Calcualte library size
+# Normalization factor
+head(spe$sizeFactor)
+
+# Equivalently, library size
 spe$total <- counts(spe) |> colSums()
 
-# Smaller set of genes
+# Down-sizing genes for faster computation
 idx <- which(
   rowData(spe)$gene_name %in% c("MOBP", "PCP4", "SNAP25",
                                 "HBB", "IGKC", "NPY")
 )
 spe <- spe[idx, ]
+```
 
+## Modeling raw counts with Poisson model
+The following example demonstrates how to model raw gene counts data with `tpSVG`.
+The model fitting is simple, following `stats::glm` syntax to follow any
+distributional assumption via the argument `family`. The only key point to 
+mention here is the model needs to account for any technical variation due to
+the gene profiling procedure. To account for such techincal variation, we use
+`offset` term in the model. In the following example, we use the commonly used
+library size as the normalizing factor, and hence set `offset = log(spe$total)`
+to account for the techinical variation in the data. Equivalently, it is also
+possible/encouraged to use `offset = log(spe$sizeFactor)`, where `spe$sizeFactor`
+is calculated during `logNormCounts` and is a linear function of the library
+size, i.e. `spe$total`. Note: it is very important to use the log function in
+the `offset` making sure the data scale is conformable. 
+
+```{r pois_eg}
 set.seed(1)
 spe_poisson  <- tpSVG(
   spe,
@@ -78,28 +116,44 @@ rowData(spe_poisson)
 
 
 ## Gaussian model for log-transformed normalized data
+`tpSVG` provides flexibility regarding the distributional assumption. If interested,
+it is possible to model log-transformed count data using Gaussian distribution.
+
 ```{r, eval = FALSE}
 spe_gauss <- tpSVG(
   spe, 
   family = gaussian(),
   assay_name = "logcounts",
-  offset = NULL   # Natural log library size
+  offset = NULL 
 )
 ```
 
-### Covariates Model
-```{r}
-#TODO: To implement this.
+## Covariate-adjusted Model
+It is scientifically interesting to understand if and how much additional
+spatial variation in gene expression when accounting some known biology. For example, 
+if known anatomy is accounted for in the model, is there any additional spatial variation
+in the gene expression which can be informative to any unknown biology. 
+Statistically, this question is known as covariate adjustment, where the known
+biology is quantified and accounted for in a model. 
 
+To address this question, `tpSVG` allows introducing covariates in the model via
+the argument `X`, where `X` takes a vector of any kind, including categorical 
+variables.
+
+The frist step is to remove any missing data in the dataset, specifically as 
+the covariate. This can be done via `complete.cases`.
+
+```{r}
 # Check missing data
 idx_complete_case <- complete.cases(spe$ground_truth)
 # If multiple covariates
 # idx_complete_case <- complete.cases(spe$ground_truth, spe$cell_count)
 
+# Remove missing data
 spe <- spe[, idx_complete_case]
-  
+
 # Create a design matrix
-x <- spe$ground_truth   # Remove intercept term
+x <- spe$ground_truth 
 
 spe_poisson_cov  <- tpSVG(
   spe,
@@ -110,3 +164,7 @@ spe_poisson_cov  <- tpSVG(
 )
 ```
 
+# Session Info
+```{r session}
+sessioninfo::session_info()
+```
