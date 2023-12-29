@@ -123,15 +123,22 @@
 #'  spe,
 #'  family = poisson,
 #'  assay_name = "counts",
-#'  offset = log(spe$total)   # Natural log library size
+#'  offset = log(spe$sizeFactor)   # Natural log library size
 #'  )
 
-tpSVG <- function(input, spatial_coords = NULL, X = NULL,
-                  family = gaussian(),
-                  offset = NULL, weights = NULL,
-                  assay_name = "logcounts",
-                  n_threads = 1, BPPARAM = NULL,
-                  verbose = FALSE, ...) {
+tpSVG <- function(
+    input,
+    spatial_coords = NULL,
+    X = NULL,
+    family = poisson(),
+    offset = log(input$sizeFactor),
+    weights = NULL,
+    assay_name = "counts",
+    n_threads = 1,
+    BPPARAM = NULL,
+    verbose = FALSE,
+    ...
+) {
 
 
   # NOTE: Some code blocks are borrowed from nnSVG by Lukas M Weber.
