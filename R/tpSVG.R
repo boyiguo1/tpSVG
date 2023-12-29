@@ -28,9 +28,16 @@
 #'   \code{binomial_deviance_residuals} for deviance residuals from the
 #'   \code{scry} package. Default = \code{"logcounts"}, or ignored if
 #'   \code{input} is provided as a \code{numeric} matrix of values.
-#' @param family TODO: fixme
-#' @param offset TODO: fixme
-#' @param weights TODO: fixme
+#' @param family a description of the error distribution and link function
+#'   to be used in the model. Currently support two distributions \code{poisson}
+#'   and \code{gaussian}
+#' @param offset This can be used to account for technician variation when
+#'   \code{family = poisson} model is used to model raw counts. \code{offset}
+#'   should take in the log-transformed scale factor, e.g.
+#'   \code{offset = log(spe$sizeFactor)}, library size, or other normalization
+#'   factor.
+#' @param weights Reserved for future development, e.g. correcting mean-var
+#'   relationship for Gaussian models. Please use with caution.
 #' @param n_threads \code{integer}: Number of threads for parallelization.
 #'   Default = 1. We recommend setting this equal to the number of cores
 #'   available (if working on a laptop or desktop) or around 10 or more (if
@@ -105,25 +112,20 @@
 #' set.seed(123)
 #'
 #' # Gaussian Model
-#' spe_gaus <- tpSVG(spe)
+#' spe_gaus <- tpSVG(
+#'  spe,
+#'  family = gaussian(),
+#'  assay_name = "logcounts"
+#'  )
 #'
 #' # Poisson Model
-#' spe_poisson  <- tpSVG(spe, family = poisson,
+#' spe_poisson  <- tpSVG(
+#'  spe,
+#'  family = poisson,
 #'  assay_name = "counts",
 #'  offset = log(spe$total)   # Natural log library size
 #'  )
-#' \dontrun{
-#' # Negative Binomial Model
-#' # Currently buggy
-#' spe_poisson  <- tpSVG(spe, family = negbin,
-#'  assay_name = "counts",
-#'  offset = log(spe$total)   # Natural log library size
-#'  )
-#'  }
-#'
-#' # show results
-#' # for more details see extended example in vignette
-#' rowData(spe_gaus)
+
 tpSVG <- function(input, spatial_coords = NULL, X = NULL,
                   family = gaussian(),
                   offset = NULL, weights = NULL,
@@ -231,9 +233,9 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
       if(!is.null(X)){
         tp_formula <- paste0(tp_formula, " + ",
                              paste0(#colnames(X), # TODO: need to fix here
-                                    "X",
-                                    collapse = "+")
-                             )
+                               "X",
+                               collapse = "+")
+        )
       }
 
       # browser()
@@ -251,7 +253,7 @@ tpSVG <- function(input, spatial_coords = NULL, X = NULL,
       res_i <- c(
         # TODO: these implementation wont work for situation where covariates are allowed
         # TODO: consistent naming convention for Statistics
-       # F_stat = anova(out_i)$s.table[,"F"],
+        # F_stat = anova(out_i)$s.table[,"F"],
         # loglik = out_i$log_likelihood,
         test_stat = anova(tp_mdl)$s.table[,"Chi.sq"],
         raw_p = anova(tp_mdl)$s.table[,"p-value"],

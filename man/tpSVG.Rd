@@ -42,11 +42,18 @@ covariates per spatial location, e.g. known spatial domains. Number of rows
 must match the number of spatial locations. Default = NULL, which fits an
 intercept-only model.}
 
-\item{family}{TODO: fixme}
+\item{family}{a description of the error distribution and link function
+to be used in the model. Currently support two distributions \code{poisson}
+and \code{gaussian}}
 
-\item{offset}{TODO: fixme}
+\item{offset}{This can be used to account for technician variation when
+\code{family = poisson} model is used to model raw counts. \code{offset}
+should take in the log-transformed scale factor, e.g.
+\code{offset = log(spe$sizeFactor)}, library size, or other normalization
+factor.}
 
-\item{weights}{TODO: fixme}
+\item{weights}{Reserved for future development, e.g. correcting mean-var
+relationship for Gaussian models. Please use with caution.}
 
 \item{assay_name}{\code{character}: If \code{input} is provided as a
 \code{SpatialExperiment} object, this argument selects the name of the
@@ -127,23 +134,17 @@ spe <- spe[ix, ]
 set.seed(123)
 
 # Gaussian Model
-spe_gaus <- tpSVG(spe)
+spe_gaus <- tpSVG(
+ spe,
+ family = gaussian(),
+ assay_name = "logcounts"
+ )
 
 # Poisson Model
-spe_poisson  <- tpSVG(spe, family = poisson,
+spe_poisson  <- tpSVG(
+ spe,
+ family = poisson,
  assay_name = "counts",
  offset = log(spe$total)   # Natural log library size
  )
-\dontrun{
-# Negative Binomial Model
-# Currently buggy
-spe_poisson  <- tpSVG(spe, family = negbin,
- assay_name = "counts",
- offset = log(spe$total)   # Natural log library size
- )
- }
-
-# show results
-# for more details see extended example in vignette
-rowData(spe_gaus)
 }
