@@ -148,8 +148,6 @@ tpSVG <- function(
   }
 
   if (!is.null(X)) {
-    # browser()
-    # stop("Not implemented yet")
     stopifnot(nrow(X) == ncol(input))
   }
 
@@ -167,12 +165,7 @@ tpSVG <- function(
     row_names <- rownames(input)
   }
 
-  # scale coordinates proportionally
-  # range_all <- max(apply(coords, 2, function(col) diff(range(col))))
-  # coords <- apply(coords, 2, function(col) (col - min(col)) / range_all)
 
-
-  # TODO: create isolated internal function
   # Check family
   # NOTE: the code is copied from "stats::glm"
   if (is.character(family))
@@ -186,8 +179,10 @@ tpSVG <- function(
   # Copy end
   if (!(family$family %in% c("gaussian", "negative binomial", "poisson"))){
     print(family)
-    stop("'family' has to be one of the following distributions: gaussian,",
-         "negative binomial (negbin), poisson")
+    stop(
+      "'family' has to be one of the following distributions: gaussian,",
+      "negative binomial (negbin), poisson"
+    )
   }
   # New function ends
 
@@ -202,11 +197,10 @@ tpSVG <- function(
 
   if(flag_count_mdl){
     if (is.null(offset)){
-      warning("Using count-based model without supplying offset.",
+      warning("Using count-based model without providing offset.",
               "Library size is calculated with column sums of the count matrix")
       offset <- log(colSums2(y))
     }
-    # TODO: Check if y matrix is count matrix
   }
 
 
@@ -232,57 +226,29 @@ tpSVG <- function(
     # fit model (intercept-only model if x is NULL)
     fit.df$tmp_y <- y[i, ]
     runtime <- system.time({
-
       tp_formula <- "tmp_y~s(coord_x, coord_y, bs='tp')"
-
-      # reformulate(, tp_formula[[2]])
-
       if(!is.null(X)){
         tp_formula <- paste0(tp_formula, " + ",
-                             paste0(#colnames(X), # TODO: need to fix here
-                               "X",
-                               collapse = "+")
+                             paste0( "X", collapse = "+")
         )
       }
 
-      # browser()
       tp_mdl <- gam(
         formula = tp_formula|> as.formula() ,
         family = family, data = fit.df,
         offset = offset, weights = weights)
     })
 
-
-    # anova(tp_mdl)
-
-
     if(flag_count_mdl) {
       res_i <- c(
-        # TODO: these implementation wont work for situation where covariates are allowed
-        # TODO: consistent naming convention for Statistics
-        # F_stat = anova(out_i)$s.table[,"F"],
-        # loglik = out_i$log_likelihood,
         test_stat = anova(tp_mdl)$s.table[,"Chi.sq"],
         raw_p = anova(tp_mdl)$s.table[,"p-value"],
-        # F_stat = anova(tp_mdl)$s.table[,"F"],
-        # raw_p = anova(tp_mdl)$s.table[,"p-value"],
-        # GE_mean = tp_mdl$coefficients[1] |> unname(),
-        # tp_edf = tp_mdl$edf |> sum() - 1,
-        # tp_ref.df = tp_mdl$edf1 |> sum() - 1,
-        # residual_var = tp_mdl$residuals |> var(),
         runtime = runtime[["elapsed"]]
       )
     } else{
       res_i <- c(
-        # TODO: these implementation wont work for situation where covariates are allowed
-        # F_stat = anova(out_i)$s.table[,"F"],
-        # loglik = out_i$log_likelihood,
         test_stat = anova(tp_mdl)$s.table[,"F"],
         raw_p = anova(tp_mdl)$s.table[,"p-value"],
-        # GE_mean = tp_mdl$coefficients[1] |> unname(),
-        # tp_edf = tp_mdl$edf |> sum() - 1,
-        # tp_ref.df = tp_mdl$edf1 |> sum() - 1,
-        # residual_var = tp_mdl$residuals |> var(),
         runtime = runtime[["elapsed"]]
       )
     }
