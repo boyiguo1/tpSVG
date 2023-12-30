@@ -64,7 +64,7 @@
 #'    for generalized models.
 #'
 #' @importFrom mgcv gam anova.gam  negbin
-#' @importFrom stats var anova gaussian as.formula
+#' @importFrom stats var anova gaussian poisson as.formula family
 #' @importFrom methods is
 #' @importFrom SpatialExperiment spatialCoords
 #' @importFrom SingleCellExperiment counts logcounts

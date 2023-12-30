@@ -8,10 +8,10 @@ tpSVG(
   input,
   spatial_coords = NULL,
   X = NULL,
-  family = gaussian(),
-  offset = NULL,
+  family = poisson(),
+  offset = log(input$sizeFactor),
   weights = NULL,
-  assay_name = "logcounts",
+  assay_name = "counts",
   n_threads = 1,
   BPPARAM = NULL,
   verbose = FALSE,
@@ -145,6 +145,6 @@ spe_poisson  <- tpSVG(
  spe,
  family = poisson,
  assay_name = "counts",
- offset = log(spe$total)   # Natural log library size
+ offset = log(spe$sizeFactor)   # Natural log library size
  )
 }
