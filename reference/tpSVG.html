@@ -62,10 +62,10 @@
 <span>  <span class="va">input</span>,</span>
 <span>  spatial_coords <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  offset <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">poisson</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">sizeFactor</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  assay_name <span class="op">=</span> <span class="st">"logcounts"</span>,</span>
+<span>  assay_name <span class="op">=</span> <span class="st">"counts"</span>,</span>
 <span>  n_threads <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -105,15 +105,22 @@ intercept-only model.</p></dd>
 
 
 <dt>family</dt>
-<dd><p>TODO: fixme</p></dd>
+<dd><p>a description of the error distribution and link function
+to be used in the model. Currently support two distributions <code>poisson</code>
+and <code>gaussian</code></p></dd>
 
 
 <dt>offset</dt>
-<dd><p>TODO: fixme</p></dd>
+<dd><p>This can be used to account for technician variation when
+<code>family = poisson</code> model is used to model raw counts. <code>offset</code>
+should take in the log-transformed scale factor, e.g.
+<code>offset = log(spe$sizeFactor)</code>, library size, or other normalization
+factor.</p></dd>
 
 
 <dt>weights</dt>
-<dd><p>TODO: fixme</p></dd>
+<dd><p>Reserved for future development, e.g. correcting mean-var
+relationship for Gaussian models. Please use with caution.</p></dd>
 
 
 <dt>assay_name</dt>
@@ -292,38 +299,19 @@ for generalized models.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Gaussian Model</span></span></span>
-<span class="r-in"><span><span class="va">spe_gaus</span> <span class="op">&lt;-</span> <span class="fu">tpSVG</span><span class="op">(</span><span class="va">spe</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">spe_gaus</span> <span class="op">&lt;-</span> <span class="fu">tpSVG</span><span class="op">(</span></span></span>
+<span class="r-in"><span> <span class="va">spe</span>,</span></span>
+<span class="r-in"><span> family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> assay_name <span class="op">=</span> <span class="st">"logcounts"</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Poisson Model</span></span></span>
-<span class="r-in"><span><span class="va">spe_poisson</span>  <span class="op">&lt;-</span> <span class="fu">tpSVG</span><span class="op">(</span><span class="va">spe</span>, family <span class="op">=</span> <span class="va">poisson</span>,</span></span>
+<span class="r-in"><span><span class="va">spe_poisson</span>  <span class="op">&lt;-</span> <span class="fu">tpSVG</span><span class="op">(</span></span></span>
+<span class="r-in"><span> <span class="va">spe</span>,</span></span>
+<span class="r-in"><span> family <span class="op">=</span> <span class="va">poisson</span>,</span></span>
 <span class="r-in"><span> assay_name <span class="op">=</span> <span class="st">"counts"</span>,</span></span>
-<span class="r-in"><span> offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">spe</span><span class="op">$</span><span class="va">total</span><span class="op">)</span>   <span class="co"># Natural log library size</span></span></span>
+<span class="r-in"><span> offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">spe</span><span class="op">$</span><span class="va">sizeFactor</span><span class="op">)</span>   <span class="co"># Natural log library size</span></span></span>
 <span class="r-in"><span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co"># Negative Binomial Model</span></span></span>
-<span class="r-in"><span><span class="co"># Currently buggy</span></span></span>
-<span class="r-in"><span><span class="va">spe_poisson</span>  <span class="op">&lt;-</span> <span class="fu">tpSVG</span><span class="op">(</span><span class="va">spe</span>, family <span class="op">=</span> <span class="va">negbin</span>,</span></span>
-<span class="r-in"><span> assay_name <span class="op">=</span> <span class="st">"counts"</span>,</span></span>
-<span class="r-in"><span> offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">spe</span><span class="op">$</span><span class="va">total</span><span class="op">)</span>   <span class="co"># Natural log library size</span></span></span>
-<span class="r-in"><span> <span class="op">)</span></span></span>
-<span class="r-in"><span> <span class="op">}</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># show results</span></span></span>
-<span class="r-in"><span><span class="co"># for more details see extended example in vignette</span></span></span>
-<span class="r-in"><span><span class="fu">rowData</span><span class="op">(</span><span class="va">spe_gaus</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 4 rows and 6 columns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         gene_id   gene_name    feature_type test_stat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     &lt;character&gt; &lt;character&gt;     &lt;character&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000167965 ENSG00000167965       MLST8 Gene Expression   5.87018</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000149923 ENSG00000149923       PPP4C Gene Expression   1.01231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000129562 ENSG00000129562        DAD1 Gene Expression   5.27228</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000114923 ENSG00000114923      SLC4A3 Gene Expression   6.34488</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      raw_p   runtime</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000167965 0.00284902     0.311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000149923 0.44164458     0.265</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000129562 0.00000000     0.265</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000114923 0.00000000     0.265</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
