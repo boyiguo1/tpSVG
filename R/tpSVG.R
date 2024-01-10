@@ -173,12 +173,10 @@ tpSVG <- function(
   if (is.function(family))
     family <- family()
   if (is.null(family$family)) {
-    print(family)
     stop("'family' not recognized")
   }
   # Copy end
   if (!(family$family %in% c("gaussian", "negative binomial", "poisson"))){
-    print(family)
     stop(
       "'family' has to be one of the following distributions: gaussian,",
       "negative binomial (negbin), poisson"
