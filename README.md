@@ -32,7 +32,7 @@ You can install the development version of tpSVG from
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
-If you have R version before v4.4 and would like to install escheR, you
+If you have R version before v4.4 and would like to install tpSVG, you
 can follow
 
     if (!require("devtools")) install.packages("devtools")
