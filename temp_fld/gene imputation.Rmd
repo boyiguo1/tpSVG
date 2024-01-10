@@ -271,7 +271,7 @@ ggarrange(
   ggplot(spe |> colData() |> data.frame())+
     geom_point(aes(x = norm_counts, y = gaus_res))+
     geom_smooth(aes(x = norm_counts, y = gaus_res))+
-    labs(title = "poisson"),
+    labs(title = "Gaussian"),
   nrow = 1
 )
 
@@ -334,7 +334,7 @@ ggarrange(
     ) +
     labs(title = "poisson"),
   spe |> make_escheR() |> 
-    add_fill("poisson_tp_term", point_size = 1.5)+ 
+    add_fill("gaus_tp_term", point_size = 1.5)+ 
     scale_fill_continuous_divergingx(
       palette = 'RdBu'
     ) +
@@ -739,7 +739,7 @@ spe |> make_escheR() |>
 
 ## Gene expression interpolationg/prediction
 
-```{r}
+```{r eval=FALSE}
 # TODO: need to implement interface for this
 coords <- spatialCoords(spe)
 colnames(coords) <- c("coord_x", "coord_y")
@@ -779,7 +779,7 @@ tp_gaus_mdl <- gam(
 
 
 ### Covariates model
-```{r}
+```{r eval = FALSE}
 # TODO: need to implement interface for this
 coords <- spatialCoords(spe)
 colnames(coords) <- c("coord_x", "coord_y")
