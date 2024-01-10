@@ -32,6 +32,18 @@ You can install the development version of tpSVG from
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
+If you have R version before v4.4 and would like to install escheR, you
+can follow
+
+    if (!require("devtools")) install.packages("devtools")
+    devtools::install_github("boyiguo1/tpSVG@pre-R4.4")
+
+> WARNING: The purpose of having the branch pre-R4.4 is to allow users
+> to use escheR before the formal release of R 4.4 and during the early
+> stage of R 4.4 release. This branch will not be update with any
+> further development beyond escheR v0.99.1. We recommend users to
+> update their R versions up to date.
+
 ### Bioconductor (pending)
 
 The package is currently submitted to Bioconductor for
