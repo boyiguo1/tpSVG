@@ -1,6 +1,6 @@
 Package: tpSVG
 Title: Thin plate models to detect spatially variable genes 
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(
     person("Boyi", "Guo",
            email = "boyi.guo.work@gmail.com",
