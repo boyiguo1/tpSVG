@@ -27,7 +27,7 @@ spe
 ```
 
 The example data set contains `351` genes for `11026` genes. To make the
-demonstration computationally feasible, we down-size the number of genes to 3. 
+demonstration computationally feasible, we down-size the number of genes to 1. 
 The average computation times for 11026 cells is roughly 2 minutes.
 
 
@@ -38,7 +38,7 @@ spe$total <- counts(spe) |> colSums()
 # Down-size genes
 idx_gene <- which(
   rowData(spe)$gene_name %in%
-    c("Sox2", "Hand1", "Gata5")
+    c("Sox2")
   )
 
 library(tpSVG)
