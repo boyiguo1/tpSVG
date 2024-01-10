@@ -33,7 +33,7 @@ biocViews:
 Encoding: UTF-8
 Depends: 
     mgcv,
-    R (>= 4.3)
+    R (>= 4.4)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
