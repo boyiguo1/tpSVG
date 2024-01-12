@@ -1,6 +1,6 @@
 Package: tpSVG
 Title: Thin plate models to detect spatially variable genes 
-Version: 0.99.3
+Version: 0.99.4
 Authors@R: c(
     person("Boyi", "Guo",
            email = "boyi.guo.work@gmail.com",
@@ -37,8 +37,7 @@ biocViews:
 Encoding: UTF-8
 Depends: 
     mgcv,
-    R (>= 4.4),
-    SpatialExperiment
+    R (>= 4.4)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
@@ -47,7 +46,8 @@ Imports:
     MatrixGenerics,
     methods,
     SingleCellExperiment,
-    SummarizedExperiment
+    SummarizedExperiment,
+    SpatialExperiment
 Suggests: 
     BiocStyle,
     knitr,
