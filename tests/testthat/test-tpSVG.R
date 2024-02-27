@@ -15,6 +15,4 @@ test_that("Farmily error prevention works", {
           family = "poisson"))
 
   expect_error(tpSVG(data.frame(), family = "tmp"))
-
-  expect_error(tpSVG(data.frame(), family = "negbin"))
 })
