@@ -144,7 +144,7 @@ tpSVG <- function(
   # NOTE: Some code blocks are borrowed from nnSVG by Lukas M Weber.
   if (is(input, "SpatialExperiment")) {
     spe <- input
-    stopifnot(assay_name %in% assayNames(spe))
+    stopifnot("Can't find assay in spe" = assay_name %in% assayNames(spe))
   }
 
   if (!is.null(X)) {
