@@ -8,5 +8,6 @@
 
 library(testthat)
 library(tpSVG)
+library(SpatialExperiment)
 
 test_check("tpSVG")
