@@ -15,10 +15,11 @@ The goal of `tpSVG` is to detect and visualize spatial variation in the
 gene expression for spatially resolved transcriptomics data analysis.
 Specifically, `tpSVG` introduces a family of count-based models, with
 generalizable parametric assumptions such as Poisson distribution or
-negative binomial distribution. In addition, comparing to currently
-available count-based model for spatially resolved data analysis, the
-`tpSVG` models improves computational time, and hence greatly improves
-the applicability of count-based models in SRT data analysis.
+negative binomial distribution. In addition, comparing to
+crmarkdown::pandoc_version()urrently available count-based model for
+spatially resolved data analysis, the `tpSVG` models improves
+computational time, and hence greatly improves the applicability of
+count-based models in SRT data analysis.
 
 ## Installation
 
@@ -28,7 +29,8 @@ You can install the development version of tpSVG from
 [GitHub](https://github.com/boyiguo1/tpSVG) with:
 
 ``` r
-# install.packages("devtools")
+#' Install devtools package if not already installed
+if (required(devtools)) install.packages(package_name)
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
@@ -66,7 +68,7 @@ The latest development version can also be installed from the `devel`
 version of Bioconductor or from GitHub following
 
 ``` r
-BiocManager::install(version='devel')
+BiocManager::install(version = "devel")
 ```
 
 ## Tutorial

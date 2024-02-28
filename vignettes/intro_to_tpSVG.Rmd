@@ -19,8 +19,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-The objective of `tpSVG` is to detect spatially variable genes when analyzing spatially-resolved transcriptomics data. This includes both unsupervised features where there's not additional information is supplied besides the (normalized) gene counts and spatial coordinates, but also the spatial variation explained besides some covariates, such as tissue anatomy or possibly cell type composition. <!-- For any interested readers, please find our preprint describing the `tpSVG` models via bioRxiv [TODO: add link].  -->
+The objective of `tpSVG` is to detect spatially variable genes (SVG) when analyzing spatially-resolved transcriptomics data. This includes both unsupervised features where there's not additional information is supplied besides the (normalized) gene counts and spatial coordinates, but also the spatial variation explained besides some covariates, such as tissue anatomy or possibly cell type composition. <!-- For any interested readers, please find our preprint describing the `tpSVG` models via bioRxiv [TODO: add link].  -->
 
+Compared to previous SVG detection tools, `tpSVG` provides a scalable solution to model the gene expression as counts instead of logarithm-transformed counts. While log transformation provides convenience to model the spatial gene expression by mapping count data to the continuous domain, hence enabling well-understood Gaussian models, log transformation distorts low expressed genes counts and create bias populating high-expressed genes. For example, the rank of genes based on their effect size are commonly used for dimensional reduction, or its input. Hence, estimating gene ranking correctly is very important. Gaussian models, exemplified with `nnSVG`, often dissociates the mean-variance relationship which is commonly assumed for counts data, and hence often prioritizes the highly expressed genes over the lowly expressed genes. In the figure below, we saw that `nnSVG` is susceptible to such mean-rank relationship, meaning highly expressed genes are often ranked highly. In contrast, the proposed `tpSVG` with Poisson distribution  is not susceptible to this mean-rank relationship when examining the [DLPFC dataset](https://pubmed.ncbi.nlm.nih.gov/33558695/).
+
+![Model counts data with `tpSVG` avoids mean-rank relationship.](../inst/figures/mean_rank.png)
 
 # Installation
 ## GitHub
@@ -162,6 +165,45 @@ spe_poisson_cov  <- tpSVG(
   assay_name = "counts",
   offset = log(spe$total)   # Natural log library size
 )
+```
+
+
+### image-based SRT in `SpatialExperiment` (e.g. `SpatialFeatureExperiment`)
+`tpSVG` can be also used to model image-based SRT data. We use
+the seqFISH data from [Lohoff and Ghazanfar _et al_. (2020)](https://www.nature.com/articles/s41587-021-01006-2) to demonstrate `tpSVG`. Specifically, we use the curated example data in [`STexampleData`](https://bioconductor.org/packages/release/data/experiment/html/STexampleData.html) package. For more information, please see the vignettes of [`STexampleData`](https://bioconductor.org/packages/release/data/experiment/vignettes/STexampleData/inst/doc/STexampleData_overview.html)
+
+```{r load_seqFISH}
+library(STexampleData)
+spe <- seqFISH_mouseEmbryo()
+
+spe
+```
+
+The example data set contains `351` genes for `11026` genes. To make the
+demonstration computationally feasible, we down-size the number of genes to 1. 
+The average computation times for 11026 cells is roughly 2 minutes.
+
+
+```{r model_seqFISH}
+# Calculate "library size"
+spe$total <- counts(spe) |> colSums()
+
+# Down-size genes
+idx_gene <- which(
+  rowData(spe)$gene_name %in%
+    c("Sox2")
+  )
+
+library(tpSVG)
+
+# Poisson model
+tp_spe <- tpSVG(
+  input = spe[idx_gene,],
+  family = poisson(),
+  offset = log(spe$total),
+  assay_name = "counts")
+
+rowData(tp_spe)
 ```
 
 # Session Info
