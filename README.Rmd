@@ -32,7 +32,7 @@ You can install the development version of tpSVG from [GitHub](https://github.co
 
 ```{r install_github, eval=FALSE}
 #' Install devtools package if not already installed
-if (required(devtools)) install.packages(package_name)
+if (!required(devtools)) install.packages(package_name)
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
@@ -83,7 +83,7 @@ __Implementation Questions__
 * What types of spatially-resolved transcriptomics (SRT) data that `tpSVG` supports?
 
   _Both sequenced-based SRT and image-based SRT data are supported by `tpSVG`.
-For more details, please refer to the vignette [supported_data_structure]](https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment)._
+For more details, please refer to the vignette [supported_data_structure](https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment)._
 
 
 * Can I use other scale factor as offset in the count-model?

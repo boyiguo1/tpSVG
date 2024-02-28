@@ -30,7 +30,7 @@ You can install the development version of tpSVG from
 
 ``` r
 #' Install devtools package if not already installed
-if (required(devtools)) install.packages(package_name)
+if (!required(devtools)) install.packages(package_name)
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
@@ -96,7 +96,7 @@ Please find an end-to-end tutorial at
 
   *Both sequenced-based SRT and image-based SRT data are supported by
   `tpSVG`. For more details, please refer to the vignette
-  \[supported_data_structure\]\](<https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment>).*
+  [supported_data_structure](https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment).*
 
 - Can I use other scale factor as offset in the count-model?
 
