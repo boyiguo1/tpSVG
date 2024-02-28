@@ -1,6 +1,14 @@
 test_that("Argument error prevention works", {
+
+  # Create some mock data for testing
+  input <- matrix(runif(100), nrow = 10)
+  row_names <- paste0("Row", 1:10)
+  spe <- SpatialExperiment::SpatialExperiment(assays = list(counts = input))
+  empty_spe <- SpatialExperiment::SpatialExperiment()
+
+
   expect_error(
-    tpSVG(SpatialExperiment::SpatialExperiment()),
+    tpSVG(empty_spe),
     "Can't find assay in spe"
   )
 
