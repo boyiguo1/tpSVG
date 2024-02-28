@@ -47,7 +47,7 @@
     
     <a class="navbar-brand me-2" href="index.html">tpSVG</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,6 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="articles/intro_to_tpSVG.html">Introduction to `tpSVG`</a>
-    <a class="dropdown-item" href="articles/supported_data_structure.html">Working with different data objects</a>
   </div>
 </li>
 <li class="nav-item">
@@ -95,7 +94,7 @@
 </div>
 <!-- badges: start -->
 
-<p>The goal of <code>tpSVG</code> is to detect and visualize spatial variation in the gene expression for spatially resolved transcriptomics data analysis. Specifically, <code>tpSVG</code> introduces a family of count-based models, with generalizable parametric assumptions such as Poisson distribution or negative binomial distribution. In addition, comparing to currently available count-based model for spatially resolved data analysis, the <code>tpSVG</code> models improves computational time, and hence greatly improves the applicability of count-based models in SRT data analysis.</p>
+<p>The goal of <code>tpSVG</code> is to detect and visualize spatial variation in the gene expression for spatially resolved transcriptomics data analysis. Specifically, <code>tpSVG</code> introduces a family of count-based models, with generalizable parametric assumptions such as Poisson distribution or negative binomial distribution. In addition, comparing to crmarkdown::pandoc_version()urrently available count-based model for spatially resolved data analysis, the <code>tpSVG</code> models improves computational time, and hence greatly improves the applicability of count-based models in SRT data analysis.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -104,14 +103,21 @@
 </h3>
 <p>You can install the development version of tpSVG from <a href="https://github.com/boyiguo1/tpSVG" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"boyiguo1/tpSVG"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">#' Install devtools package if not already installed</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu">required</span><span class="op">(</span><span class="va">devtools</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="va">package_name</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"boyiguo1/tpSVG"</span><span class="op">)</span></span></code></pre></div>
+<p>If you have R version before v4.4 and would like to install tpSVG, you can follow</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"devtools"</span>)) <span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"boyiguo1/tpSVG@pre-R4.4"</span>)</span></code></pre></div>
+<blockquote>
+<p>WARNING: The purpose of having the branch pre-R4.4 is to allow users to use escheR before the formal release of R 4.4 and during the early stage of R 4.4 release. This branch will not be update with any further development beyond escheR v0.99.1. We recommend users to update their R versions up to date.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="bioconductor-pending">Bioconductor (pending)<a class="anchor" aria-label="anchor" href="#bioconductor-pending"></a>
 </h3>
 <p>The package is currently submitted to Bioconductor for <a href="https://github.com/Bioconductor/Contributions/issues/3264" class="external-link">review</a>. Once the package is accepted by Bioconductor, you can install the latest release version of <code>tpSVG</code> from Bioconductor via the following code. Additional details are shown on the Bioconductor page.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># NOTE: The package is under-review with bioconductor.</span></span>
 <span><span class="co">#       The following code section will work once the package is accepted.</span></span>
 <span></span>
@@ -120,8 +126,8 @@
 <span><span class="op">}</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"tpSVG"</span><span class="op">)</span></span></code></pre></div>
 <p>The latest development version can also be installed from the <code>devel</code> version of Bioconductor or from GitHub following</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span>version<span class="op">=</span><span class="st">'devel'</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span>version <span class="op">=</span> <span class="st">"devel"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
