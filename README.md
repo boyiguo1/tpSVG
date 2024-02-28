@@ -28,7 +28,8 @@ You can install the development version of tpSVG from
 [GitHub](https://github.com/boyiguo1/tpSVG) with:
 
 ``` r
-# install.packages("devtools")
+#' Install devtools package if not already installed
+if (required(devtools)) install.packages(package_name)
 devtools::install_github("boyiguo1/tpSVG")
 ```
 
@@ -66,7 +67,7 @@ The latest development version can also be installed from the `devel`
 version of Bioconductor or from GitHub following
 
 ``` r
-BiocManager::install(version='devel')
+BiocManager::install(version = "devel")
 ```
 
 ## Tutorial
