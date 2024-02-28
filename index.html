@@ -104,7 +104,7 @@
 <p>You can install the development version of tpSVG from <a href="https://github.com/boyiguo1/tpSVG" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Install devtools package if not already installed</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu">required</span><span class="op">(</span><span class="va">devtools</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="va">package_name</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">required</span><span class="op">(</span><span class="va">devtools</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="va">package_name</span><span class="op">)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"boyiguo1/tpSVG"</span><span class="op">)</span></span></code></pre></div>
 <p>If you have R version before v4.4 and would like to install tpSVG, you can follow</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(<span class="st">"devtools"</span>)) <span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
@@ -146,7 +146,7 @@
 </li>
 <li>
 <p>What types of spatially-resolved transcriptomics (SRT) data that <code>tpSVG</code> supports?</p>
-<p><em>Both sequenced-based SRT and image-based SRT data are supported by <code>tpSVG</code>. For more details, please refer to the vignette [supported_data_structure]](<a href="https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment" class="external-link uri">https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment</a>).</em></p>
+<p><em>Both sequenced-based SRT and image-based SRT data are supported by <code>tpSVG</code>. For more details, please refer to the vignette <a href="https://boyi-guo.com/tpSVG/articles/supported_data_structure.html#image-based-srt-in-spatialexperiment-e-g--spatialfeatureexperiment" class="external-link">supported_data_structure</a>.</em></p>
 </li>
 <li>
 <p>Can I use other scale factor as offset in the count-model?</p>
