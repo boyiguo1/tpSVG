@@ -15,10 +15,11 @@ The goal of `tpSVG` is to detect and visualize spatial variation in the
 gene expression for spatially resolved transcriptomics data analysis.
 Specifically, `tpSVG` introduces a family of count-based models, with
 generalizable parametric assumptions such as Poisson distribution or
-negative binomial distribution. In addition, comparing to currently
-available count-based model for spatially resolved data analysis, the
-`tpSVG` models improves computational time, and hence greatly improves
-the applicability of count-based models in SRT data analysis.
+negative binomial distribution. In addition, comparing to
+crmarkdown::pandoc_version()urrently available count-based model for
+spatially resolved data analysis, the `tpSVG` models improves
+computational time, and hence greatly improves the applicability of
+count-based models in SRT data analysis.
 
 ## Installation
 
